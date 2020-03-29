@@ -14,3 +14,7 @@ The straight-through estimator is a biased estimator because the non-differentia
 The Slope Annealing Trick. In our experiment, we use the slope annealing trick to reduce the bias of the straight-through estimator. The idea is to reduce the discrepancy between the two functions used during the forward pass and the backward pass. That is, by gradually increasing the slope a of the hard sigmoid function, we make the hard sigmoid be close to the step function. Note that starting with a high slope value from the beginning can make the training difficult while it is more applicable later when the model parameters become more stable. In our experiments, starting from slope a = 1, we slowly increase the slope until it reaches a threshold with an appropriate scheduling. "
 
 
+
+(Licence: most of the code for this repository is retrieved comes from this repository: [Wizaron/binary-stochastic-neurons](https://github.com/Wizaron/binary-stochastic-neurons)
+
+
