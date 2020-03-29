@@ -15,6 +15,6 @@ The Slope Annealing Trick. In our experiment, we use the slope annealing trick t
 
 
 
-(Licence: most of the code for this repository comes from this repository: [Wizaron/binary-stochastic-neurons](https://github.com/Wizaron/binary-stochastic-neurons).
+(Licence: most of the code for this repository comes from this repository: [Wizaron/binary-stochastic-neurons](https://github.com/Wizaron/binary-stochastic-neurons).)
 
 
