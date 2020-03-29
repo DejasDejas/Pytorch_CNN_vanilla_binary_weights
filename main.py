@@ -16,7 +16,7 @@ Code source: https://github.com/Wizaron/binary-stochastic-neurons
 # parameters default values
 lr = 0.1
 momentum = 0.9
-nb_epoch = 1
+nb_epoch = 10
 batch_size_train = 64
 batch_size_test = 1000
 slope_annealing = False
