@@ -26,10 +26,8 @@ class RoundFunctionST(Function):
         =======
         :return: a tensor which is round(input)"""
 
-        # We can cache arbitrary Tensors for use in the backward pass using the
-        # save_for_backward method.
+        # We can cache arbitrary Tensors for use in the backward pass using the save_for_backward method.
         # ctx.save_for_backward(input)
-
         return torch.round(input)
 
     @staticmethod
@@ -50,7 +48,6 @@ class RoundFunctionST(Function):
         # ignored, the return statement is simple even when the function has
         # optional inputs.
         # input, weight, bias = ctx.saved_variables
-
         return grad_output
 
 
@@ -58,12 +55,10 @@ class BernoulliFunctionST(Function):
 
     @staticmethod
     def forward(ctx, input):
-
         return torch.bernoulli(input)
 
     @staticmethod
     def backward(ctx, grad_output):
-
         return grad_output
 
 

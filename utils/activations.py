@@ -1,5 +1,5 @@
 import torch.nn as nn
-from utils.utils import Hardsigmoid, RoundST, BernoulliST
+from utils.functions import Hardsigmoid, RoundST, BernoulliST
 from distributions import Bernoulli as BernoulliREINFORCE
 from distributions import Round as RoundREINFORCE
 
@@ -45,8 +45,8 @@ class StochasticBinaryActivation(nn.Module):
 
     def forward(self, input):
         x, slope = input
-        probs = self.act(slope * x)
-        out = self.binarizer(probs)
+        probability = self.act(slope * x)
+        out = self.binarizer(probability)
         if self.estimator == 'REINFORCE':
             out = out.sample()
         return out

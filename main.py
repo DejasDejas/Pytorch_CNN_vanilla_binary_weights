@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from utils.models import NonBinaryNet, BinaryNet
 
+
 """
 Code source: https://github.com/Wizaron/binary-stochastic-neurons
 """
@@ -15,14 +16,16 @@ Code source: https://github.com/Wizaron/binary-stochastic-neurons
 # parameters default values
 lr = 0.1
 momentum = 0.9
-nb_epoch = 10
+nb_epoch = 1
 batch_size_train = 64
 batch_size_test = 1000
 slope_annealing = False
 reinforce = False
 stochastic = True
 binary = True
-plot_result = True
+plot_result = False
+first_conv_layer = False
+last_conv_layer = False
 
 # Model, activation type, estimator type
 if binary:
@@ -34,11 +37,16 @@ if binary:
         names_model = 'Deterministic'
     if reinforce:
         estimator = 'REINFORCE'
-        names_model += '_REINFORCE_'
+        names_model += '_REINFORCE'
     else:
         estimator = 'ST'
-        names_model += '_ST_'
-    model = BinaryNet(mode=mode, estimator=estimator)
+        names_model += '_ST'
+    if first_conv_layer:
+        names_model += '_first_conv_binary'
+    if last_conv_layer:
+        names_model += '_last_conv_binary'
+    model = BinaryNet(first_conv_layer=first_conv_layer, last_conv_layer=last_conv_layer,
+                      mode=mode, estimator=estimator)
 else:
     model = NonBinaryNet()
     names_model = 'NonBinaryNet'
@@ -55,20 +63,19 @@ train_loader, valid_loader, test_loader, classes = get_mnist_dataloaders(batch_s
 
 # Slope annealing
 if slope_annealing:
-    get_slope = lambda epoch: 1.0 * (1.005 ** (epoch - 1))
+    def get_slope(number_epoch): return 1.0 * (1.005 ** (number_epoch - 1))
 else:
-    get_slope = lambda epoch: 1.0
+    def get_slope(number_epoch): return 1.0
 
-# TODO: create conv layer to have 2 layer CNN
 
 # train
 # optimizer
-# optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
-# train_loss, train_acc, val_loss, val_acc = training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader,
-#                                                    optimizer, plot_result, get_slope)
+optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+in_loss, train_acc, val_loss, val_acc = training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader,
+                                                   optimizer, plot_result, get_slope)
 # test
-model.load_state_dict(load('./trained_models/MNIST/' + names_model + '.pt'))
-# test_loss, test_acc = test(use_gpu, model, test_loader, nb_epoch, get_slope)
+# model.load_state_dict(load('./trained_models/MNIST/' + names_model + '.pt'))
+# test_loss, test_acc = test(use_gpu, model, test_loader, get_slope, epoch=0)
 
 """
 # visualise activations

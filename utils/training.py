@@ -47,7 +47,7 @@ def training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader, 
         print('# Epoch : {} - Slope : {}'.format(epoch, slope))
         start_time = time.time()
         train_loss, train_acc = train(use_gpu, model, train_loader, optimizer, slope)
-        valid_loss, valid_acc = test(use_gpu, model, valid_loader, epoch, get_slope)
+        valid_loss, valid_acc = test(use_gpu, model, valid_loader, get_slope, epoch)
 
         loss_values_train.append(train_loss)
         acc_values_train.append(train_acc)
@@ -59,9 +59,9 @@ def training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader, 
             save(model.state_dict(), './trained_models/MNIST/' + names_model + '.pt')
 
         end_time = time.time()
-        epoch_mins, epoch_secs = epoch_time(start_time, end_time)
+        epoch_minutes, epoch_secs = epoch_time(start_time, end_time)
 
-        print(f'Epoch: {epoch + 1:02} | Epoch Time: {epoch_mins}m {epoch_secs}s')
+        print(f'Epoch: {epoch + 1:02} | Epoch Time: {epoch_minutes}m {epoch_secs}s')
         print(f'\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc * 100:.2f}%')
         print(f'\t Val. Loss: {valid_loss:.3f} |  Val. Acc: {valid_acc * 100:.2f}%')
 
@@ -71,11 +71,9 @@ def training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader, 
 
 
 # Testing procedure
-def test(use_gpu, model, test_loader, epoch, get_slope):
+def test(use_gpu, model, test_loader, get_slope, epoch):
 
-    # TODO: know "get_slope", for use or not "epoch"
     slope = get_slope(epoch)
-
     model.eval()
     test_loss = 0.0
     correct = 0.0
