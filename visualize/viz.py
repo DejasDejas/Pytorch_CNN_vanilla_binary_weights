@@ -68,6 +68,8 @@ def imshow_v2(inp, title=None):
 def show_databatch(inputs, classes):
     out = make_grid(inputs)
     imshow(out)
+    plt.show()
+    print(classes)
 
 
 def visualize_model(model, dataloaders, device, num_images=6):

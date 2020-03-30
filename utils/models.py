@@ -16,8 +16,10 @@ class Net(nn.Module):
 
 class NonBinaryNet(Net):
 
-    def __init__(self):
+    def __init__(self, omniglot):
         super(NonBinaryNet, self).__init__()
+
+        self.omniglot = omniglot
 
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=5, padding=2),
@@ -29,7 +31,10 @@ class NonBinaryNet(Net):
             nn.BatchNorm2d(32),
             nn.MaxPool2d(2))
         self.act_layer2 = Hardsigmoid()
-        self.fc = nn.Linear(7*7*32, 10)
+        if self.omniglot:
+            self.fc = nn.Linear(26 * 26 * 32, 1623)
+        else:
+            self.fc = nn.Linear(7*7*32, 10)
 
     def forward(self, input):
         x, slope = input

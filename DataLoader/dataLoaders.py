@@ -22,13 +22,12 @@ def get_mnist_dataloaders(batch_size_train, batch_size_test):
                                                                                                (0.3081,))])),
                              batch_size=batch_size_test, shuffle=True)
 
-
     # to split valid data
     n_train_examples = int(len(train_data) * 0.9)
     n_valid_examples = len(train_data) - n_train_examples
     train_data, valid_data = random_split(train_data, [n_train_examples, n_valid_examples])
-    valid_loader = DataLoader(valid_data, batch_size=batch_size_train ,shuffle=True)
-    train_loader = DataLoader(train_data, batch_size=batch_size_train ,shuffle=True)
+    valid_loader = DataLoader(valid_data, batch_size=batch_size_train, shuffle=True)
+    train_loader = DataLoader(train_data, batch_size=batch_size_train, shuffle=True)
     print(f'Number of validation examples: {len(valid_data)}')
 
     print_data_number(train_loader, test_loader)
@@ -47,10 +46,7 @@ def get_omniglot_dataloaders(batch_size_train, batch_size_test):
     :param batch_size_test: int
     :return: train_loader, test_loader
     """
-    all_transforms = transforms.Compose([
-        transforms.Resize(64),
-        transforms.ToTensor()
-    ])
+    all_transforms = transforms.Compose([transforms.ToTensor()])
 
     background_set = datasets.Omniglot(root='./data', background=True, download=True, transform=all_transforms)
     evaluation_set = datasets.Omniglot(root='./data', background=False, download=True, transform=all_transforms)

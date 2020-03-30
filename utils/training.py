@@ -4,6 +4,27 @@ import time
 from torch import save
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
+
+
+def gpu_config(model):
+
+    use_gpu = torch.cuda.is_available()
+    gpu_count = torch.cuda.device_count()
+    # torch.cuda.device(0)
+    # torch.cuda.current_device()
+    if use_gpu:
+        if gpu_count > 1:
+            print('use {} gpu who named:'.format(gpu_count))
+            for i in range(gpu_count):
+                print(torch.cuda.get_device_name(i))
+            model = torch.nn.DataParallel(model)
+        else:
+            print('use 1 gpu who named: {}'.format(torch.cuda.get_device_name(0)))
+            model.cuda()
+    else:
+        print('no gpu available !')
+    return model, use_gpu
 
 
 # Training procedure
