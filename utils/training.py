@@ -66,7 +66,7 @@ def training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader, 
         print(f'\t Val. Loss: {valid_loss:.3f} |  Val. Acc: {valid_acc * 100:.2f}%')
 
     if plot_result:
-        plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_values_valid)
+        plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_values_valid, names_model)
     return loss_values_train, acc_values_train, loss_values_valid, acc_values_valid
 
 
@@ -108,7 +108,7 @@ def epoch_time(start_time, end_time):
     return elapsed_minutes, elapsed_secs
 
 
-def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_values_valid):
+def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_values_valid, name_model):
     # summarize history for accuracy
     plt.plot(np.array(acc_values_train))
     plt.plot(np.array(acc_values_valid))
@@ -117,6 +117,7 @@ def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_va
     plt.xlabel('epoch')
     plt.xlim(0, 10)
     plt.legend(['train', 'val'], loc='upper left')
+    plt.savefig('results/MNIST_results/results_loss_acc/acc_model_' + name_model + '.png')
     plt.show()
     # summarize history for loss
     plt.plot(np.array(loss_values_train))
@@ -126,5 +127,7 @@ def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_va
     plt.xlabel('epoch')
     plt.xlim(0, 10)
     plt.legend(['train', 'test'], loc='upper left')
+    plt.savefig('results/MNIST_results/results_loss_acc/loss_model_' + name_model + '.png')
     plt.show()
+    
     return

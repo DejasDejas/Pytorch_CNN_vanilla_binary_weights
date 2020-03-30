@@ -71,7 +71,7 @@ else:
 # train
 # optimizer
 optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
-in_loss, train_acc, val_loss, val_acc = training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader,
+train_loss, train_acc, val_loss, val_acc = training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader,
                                                    optimizer, plot_result, get_slope)
 # test
 # model.load_state_dict(load('./trained_models/MNIST/' + names_model + '.pt'))

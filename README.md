@@ -1,3 +1,5 @@
+# Open Binary MNIST V2 notebook:
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1QKBijTVOMIgflyN5qQRqbSsApHhccHGT#scrollTo=Lk3XSHXZ_yV3)
 
 
@@ -5,7 +7,28 @@
 
 We train a binary neral network. To train a neural network with discrete variables, we can use two methods: REINFORCE (E (Williams, 1992; Mnih & Gregor,2014) and the straight-through estimator (Hinton, 2012; Bengio et al., 2013).
 
+## Resume results obtained on MNIST:
 
+|               Models: 2 conv layers (29k parameters)              	|      Loss      	|  Accuracy (%)  	|
+|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
+| No binary models                                                  	|     **0.0341**     	|      **98.79**     	|
+|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
+| Stochastic binary model in the first conv layer with ST           	|     0.0539     	|      98.29     	|
+| Stochastic binary model in the last conv layer with ST            	|     **0.0534**     	|      **98.31**     	|
+| Stochastic binary model in the both conv layer with ST            	|     0.0710     	|      97.54     	|
+| Stochastic binary model in the first conv layer with REINFORCE    	|     0.0749     	|      97.56     	|
+| Stochastic binary model in the last conv layer with REINFORCE     	|     1.2811     	|      88.95     	|
+| Stochastic binary model in the both conv layer with REINFORCE     	|     3.2085     	|      80.68     	|
+|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
+| Deterministic binary model in the first conv layer with ST        	|     **0.03912**    	|      **98.65**     	|
+| Deterministic binary model in the last conv layer with ST         	|     0.0743     	|      97.81     	|
+| Deterministic binary model in the both conv layer with ST         	|     0.0745     	|      97.57     	|
+| Deterministic binary model in the first conv layer with REINFORCE 	|     0.0684     	|      97.76     	|
+| Deterministic binary model in the last conv layer with REINFORCE  	|     0.5569     	|      95.42     	|
+| Deterministic binary model in the both conv layer with REINFORCE  	|     0.8538     	|      93.40     	|
+
+
+## Slope Annealing explicaion:
 Extract from : ["HIERARCHICAL MULTISCALE RECURRENT NEURAL NETWORKS", Junyoung Chung, Sungjin Ahn & Yoshua Bengio (Mar 2017).](https://arxiv.org/pdf/1609.01704.pdf) :
 
 " Training neural networks with discrete variables requires more efforts since the standard backpropagation is no longer applicable due to the non-differentiability. Among a few methods for training a neural network with discrete variables such as the REINFORCE (Williams, 1992; Mnih & Gregor,2014) and the straight-through estimator (Hinton, 2012; Bengio et al., 2013). [...]
@@ -15,6 +38,9 @@ The Slope Annealing Trick. In our experiment, we use the slope annealing trick t
 
 
 
-(Licence: most of the code for this repository comes from this repository: [Wizaron/binary-stochastic-neurons](https://github.com/Wizaron/binary-stochastic-neurons).)
+## References: 
+*   (Licence: most of the code for this repository comes from this repository: [Wizaron/binary-stochastic-neurons](https://github.com/Wizaron/binary-stochastic-neurons).)
+*   ["HIERARCHICAL MULTISCALE RECURRENT NEURAL NETWORKS", Junyoung Chung, Sungjin Ahn & Yoshua Bengio (Mar 2017).](https://arxiv.org/pdf/1609.01704.pdf)
+*   
 
 

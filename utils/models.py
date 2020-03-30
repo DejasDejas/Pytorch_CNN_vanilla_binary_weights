@@ -23,17 +23,18 @@ class NonBinaryNet(Net):
             nn.Conv2d(1, 16, kernel_size=5, padding=2),
             nn.BatchNorm2d(16),
             nn.MaxPool2d(2))
-        self.act = Hardsigmoid()
+        self.act_layer1 = Hardsigmoid()
         self.layer2 = nn.Sequential(
             nn.Conv2d(16, 32, kernel_size=5, padding=2),
             nn.BatchNorm2d(32),
             nn.MaxPool2d(2))
+        self.act_layer2 = Hardsigmoid()
         self.fc = nn.Linear(7*7*32, 10)
 
     def forward(self, input):
         x, slope = input
-        x_layer1 = self.act(self.layer1(x) * slope)
-        x_layer2 = self.act(self.layer2(x_layer1))
+        x_layer1 = self.act_layer1(self.layer1(x) * slope)
+        x_layer2 = self.act_layer2(self.layer2(x_layer1))
         x_layer2 = x_layer2.view(x_layer2.size(0), -1)
         x_fc = self.fc(x_layer2)
         x_out = F.log_softmax(x_fc, dim=1)
