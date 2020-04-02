@@ -28,10 +28,10 @@ We train a binary neral network. To train a neural network with discrete variabl
 | Deterministic binary model in the both conv layer with REINFORCE  	|     0.8538     	|      93.40     	|
 
 ### Heatmap:
-
-![heatmap no binary network conv1](results/MNIST_results/heatmap_png/heatmapNonBinaryNet.png "heatmap no binary network conv1")
-
-![heatmap binary network Stochastic ST conv1](results/MNIST_results/heatmap_png/heatmapStochastic_ST_first_conv_binary.png "heatmap binary network Stochastic ST conv1")
+heatmap No binary network, conv layer1:
+![heatmap no binary network conv1](results/MNIST_results/heatmap_png/heatmapNonBinaryNet_conv1.png "heatmap no binary network conv1")
+heatmap Stochastic binary network with ST, conv layer1:
+![heatmap binary network Stochastic ST conv1](results/MNIST_results/heatmap_png/heatmapStochastic_ST_first_conv_binary_conv1.png "heatmap binary network Stochastic ST conv1")
 
 ### Slope Annealing explicaion:
 Extract from : ["HIERARCHICAL MULTISCALE RECURRENT NEURAL NETWORKS", Junyoung Chung, Sungjin Ahn & Yoshua Bengio (Mar 2017).](https://arxiv.org/pdf/1609.01704.pdf) :
