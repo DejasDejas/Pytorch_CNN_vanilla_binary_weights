@@ -1,5 +1,6 @@
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
+from utils.core import NShotTaskSampler
 
 
 def get_mnist_dataloaders(batch_size_train, batch_size_test):
@@ -35,7 +36,7 @@ def get_mnist_dataloaders(batch_size_train, batch_size_test):
     return train_loader, valid_loader, test_loader, classes
 
 
-def get_omniglot_dataloaders(batch_size_train, batch_size_test):
+def get_omniglot_dataloaders_v1():
     """
     Omniglot data set for one-shot learning. This dataset contains 1623 different handwritten characters
     from 50 different alphabets.
@@ -51,11 +52,28 @@ def get_omniglot_dataloaders(batch_size_train, batch_size_test):
     background_set = datasets.Omniglot(root='./data', background=True, download=True, transform=all_transforms)
     evaluation_set = datasets.Omniglot(root='./data', background=False, download=True, transform=all_transforms)
 
-    train_loader = DataLoader(background_set, batch_size=batch_size_train, shuffle=True)
-    test_loader = DataLoader(evaluation_set, batch_size=batch_size_test, shuffle=True)
+    train_loader = DataLoader(background_set, shuffle=True)
+    test_loader = DataLoader(evaluation_set, shuffle=True)
 
     print_data_number(train_loader, test_loader)
     return train_loader, test_loader
+
+
+def get_omniglot_dataloader_v2(episodes_per_epoch, n_train, k_train, q_train, n_test, k_test, q_test, dataset_class):
+    background = dataset_class('background')
+    background_taskloader = DataLoader(
+        background,
+        batch_sampler=NShotTaskSampler(background, episodes_per_epoch, n_train, k_train, q_train),
+        num_workers=4
+    )
+    evaluation = dataset_class('evaluation')
+    evaluation_taskloader = DataLoader(
+        evaluation,
+        batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch, n_test, k_test, q_test),
+        num_workers=4
+    )
+    print_data_number(background_taskloader, evaluation_taskloader)
+    return background_taskloader, evaluation_taskloader
 
 
 def print_data_number(train_loader, test_loader):

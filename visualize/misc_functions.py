@@ -211,12 +211,107 @@ def get_example_params(loader):
         file_name_to_export (string): File name to export the visualizations
         pretrained_model(Pytorch model): Model to use for the operations
     """
-    inputs, classes = next(iter(loader))
+    img_path = '/home/julien/PycharmProjects/thesis/work/Pytorch/MNIST_Binary_V2/experiments/example_mnist_data.jpg'
+    # inputs, classes = next(iter(loader))
+    target_class = 4
+    file_name_to_export = img_path[img_path.rfind('/') + 1:img_path.rfind('.')]
     # Read image
-    original_image = Image.open(inputs).convert('RGB')
+    original_image = Image.open(img_path).convert('RGB')
     # Process image
     prep_img = preprocess_image(original_image)
     # Define model
     return (original_image,
             prep_img,
-            classes,)
+            target_class,
+            file_name_to_export)
+
+
+class CamExtractor:
+    """
+        Extracts cam features from the model
+    """
+    def __init__(self, model, target_layer):
+        self.model = model
+        self.target_layer = target_layer
+        self.gradients = None
+
+    def save_gradient(self, grad):
+        self.gradients = grad
+
+    def forward_pass_on_convolutions(self, x):
+        """
+            Does a forward pass on convolutions, hooks the function at given layer
+        """
+        conv_output = None
+        for module_pos, module in self.model.fc._modules.items():
+            x = module(x)  # Forward
+            if int(module_pos) == self.target_layer:
+                x.register_hook(self.save_gradient)
+                conv_output = x  # Save the convolution output on that layer
+        return conv_output, x
+
+    def forward_pass(self, x):
+        """
+            Does a full forward pass on the model
+        """
+        # Forward pass on the convolutions
+        conv_output, x = self.forward_pass_on_convolutions(x)
+        # x = x.view(x.size(0), -1)  # Flatten
+        x = x.reshape(x.size(0), -1)
+        # Forward pass on the classifier
+        x = self.model.fc(x)
+        return conv_output, x
+
+
+class GradCam:
+    """
+        Produces class activation map
+    """
+    def __init__(self, model, target_layer):
+        self.model = model
+        self.model.eval()
+        # Define extractor
+        self.extractor = CamExtractor(self.model, target_layer)
+
+    def generate_cam(self, input_image, target_class=None):
+        # Full forward pass
+        # conv_output is the output of convolutions at specified layer
+        # model_output is the final output of the model (1, 1000)
+        conv_output, model_output = self.extractor.forward_pass(input_image)
+        if target_class is None:
+            target_class = np.argmax(model_output.data.numpy())
+        # Target for backprop
+        one_hot_output = torch.FloatTensor(1, model_output.size()[-1]).zero_()
+        one_hot_output[0][target_class] = 1
+        # Zero grads
+        self.model.features.zero_grad()
+        self.model.classifier.zero_grad()
+        # Backward pass with specified target
+        model_output.backward(gradient=one_hot_output, retain_graph=True)
+        # Get hooked gradients
+        guided_gradients = self.extractor.gradients.data.numpy()[0]
+        # Get convolution outputs
+        target = conv_output.data.numpy()[0]
+        # Get weights from gradients
+        weights = np.mean(guided_gradients, axis=(1, 2))  # Take averages for each gradient
+        # Create empty numpy array for cam
+        cam = np.ones(target.shape[1:], dtype=np.float32)
+        # Multiply each weight with its conv output and then, sum
+        for i, w in enumerate(weights):
+            cam += w * target[i, :, :]
+        cam = np.maximum(cam, 0)
+        cam = (cam - np.min(cam)) / (np.max(cam) - np.min(cam))  # Normalize between 0-1
+        cam = np.uint8(cam * 255)  # Scale between 0-255 to visualize
+        cam = np.uint8(Image.fromarray(cam).resize((input_image.shape[2],
+                       input_image.shape[3]), Image.ANTIALIAS))/255
+        # ^ I am extremely unhappy with this line. Originally resizing was done in cv2 which
+        # supports resizing numpy matrices with antialiasing, however,
+        # when I moved the repository to PIL, this option was out of the window.
+        # So, in order to use resizing with ANTIALIAS feature of PIL,
+        # I briefly convert matrix to PIL image and then back.
+        # If there is a more beautiful way, do not hesitate to send a PR.
+
+        # You can also use the code below instead of the code line above, suggested by @ ptschandl
+        # from scipy.ndimage.interpolation import zoom
+        # cam = zoom(cam, np.array(input_image[0].shape[1:])/np.array(cam.shape))
+        return cam

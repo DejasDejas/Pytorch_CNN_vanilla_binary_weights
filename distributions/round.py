@@ -1,3 +1,4 @@
+from abc import ABC
 from numbers import Number
 
 import torch
@@ -6,7 +7,7 @@ from distributions.distribution import Distribution
 from distributions.utils import broadcast_all
 
 
-class Round(Distribution):
+class Round(Distribution, ABC):
     has_enumerate_support = True
 
     def __init__(self, probs):

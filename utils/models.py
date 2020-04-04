@@ -16,10 +16,8 @@ class Net(nn.Module):
 
 class NonBinaryNet(Net):
 
-    def __init__(self, omniglot):
+    def __init__(self):
         super(NonBinaryNet, self).__init__()
-
-        self.omniglot = omniglot
 
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=5, padding=2),
@@ -31,10 +29,7 @@ class NonBinaryNet(Net):
             nn.BatchNorm2d(32),
             nn.MaxPool2d(2))
         self.act_layer2 = Hardsigmoid()
-        if self.omniglot:
-            self.fc = nn.Linear(26 * 26 * 32, 1623)
-        else:
-            self.fc = nn.Linear(7*7*32, 10)
+        self.fc = nn.Linear(7*7*32, 10)
 
     def forward(self, input):
         x, slope = input
@@ -99,3 +94,70 @@ class BinaryNet(Net):
         x_fc = self.fc(x_layer2)
         x_out = F.log_softmax(x_fc, dim=1)
         return x_out
+
+
+class NoBinaryMatchingNetwork(nn.Module):
+    def __init__(self, n: int, k: int, q: int, num_input_channels: int):
+        """Creates a Matching Network as described in Vinyals et al.
+        # Arguments:
+            n: Number of examples per class in the support set
+            k: Number of classes in the few shot classification task
+            q: Number of examples per class in the query set
+            fce: Whether or not to us fully conditional embeddings
+            num_input_channels: Number of color channels the model expects input data to contain. Omniglot = 1,
+                miniImageNet = 3
+            lstm_layers: Number of LSTM layers in the bidrectional LSTM g that embeds the support set (fce = True)
+            lstm_input_size: Input size for the bidirectional and Attention LSTM. This is determined by the embedding
+                dimension of the few shot encoder which is in turn determined by the size of the input data. Hence we
+                have Omniglot -> 64, miniImageNet -> 1600.
+            unrolling_steps: Number of unrolling steps to run the Attention LSTM
+            device: Device on which to run computation
+        """
+        super(NoBinaryMatchingNetwork, self).__init__()
+        self.n = n
+        self.k = k
+        self.q = q
+        self.num_input_channels = num_input_channels
+        self.encoder = get_few_shot_encoder(self.num_input_channels)
+
+    def forward(self, inputs):
+        pass
+
+
+def get_few_shot_encoder(num_input_channels=1) -> nn.Module:
+    """Creates a few shot encoder as used in Matching and Prototypical Networks
+    # Arguments:
+        num_input_channels: Number of color channels the model expects input data to contain. Omniglot = 1,
+            miniImageNet = 3
+    """
+    return nn.Sequential(
+        conv_block(num_input_channels, 64),
+        conv_block(64, 64),
+        conv_block(64, 64),
+        conv_block(64, 64),
+        Flatten(),
+    )
+
+
+def conv_block(in_channels: int, out_channels: int) -> nn.Module:
+    """Returns a Module that performs 3x3 convolution, ReLu activation, 2x2 max pooling.
+    # Arguments
+        in_channels:
+        out_channels:
+    """
+    return nn.Sequential(
+        nn.Conv2d(in_channels, out_channels, 3, padding=1),
+        nn.BatchNorm2d(out_channels),
+        nn.ReLU(),
+        nn.MaxPool2d(kernel_size=2, stride=2)
+    )
+
+
+class Flatten(nn.Module):
+    """Converts N-dimensional Tensor of shape [batch_size, d1, d2, ..., dn] to 2-dimensional Tensor
+    of shape [batch_size, d1*d2*...*dn].
+    # Arguments
+        input: Input tensor
+    """
+    def forward(self, input):
+        return input.view(input.size(0), -1)

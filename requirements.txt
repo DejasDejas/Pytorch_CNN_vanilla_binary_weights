@@ -1,3 +1,6 @@
+pandas
+tqdm
+scikit-image
 torch
 torchvision
 matplotlib
