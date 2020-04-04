@@ -48,10 +48,17 @@ model.double()
 ###########
 # Dataset #
 ###########
-background_taskloader, evaluation_taskloader = get_omniglot_dataloader_v2(episodes_per_epoch, n_train, k_train,
-                                                                          q_train, n_test, k_test, q_test,
-                                                                          dataset_class)
+# background_taskloader, evaluation_taskloader = get_omniglot_dataloader_v2(episodes_per_epoch, n_train, k_train,
+#                                                                          q_train, n_test, k_test, q_test,
+#                                                                          dataset_class)
+# save dataloader:
+# torch.save(background_taskloader, 'background_taskloader.pth')
+# torch.save(evaluation_taskloader, 'evaluation_taskloader.pth')
+# load dataloader
+background_taskloader = torch.load('background_taskloader.pth')
+evaluation_taskloader = torch.load('evaluation_taskloader.pth')
 
+"""
 ############
 # Training #
 ############
@@ -92,3 +99,4 @@ fit(
     fit_function=matching_net_episode,
     fit_function_kwargs={'n_shot': n_train, 'k_way': k_train, 'q_queries': q_train, 'train': True, 'distance': distance}
 )
+"""
