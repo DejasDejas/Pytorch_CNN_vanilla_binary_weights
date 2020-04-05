@@ -29,7 +29,7 @@ class NonBinaryNet(Net):
             nn.BatchNorm2d(32),
             nn.MaxPool2d(2))
         self.act_layer2 = Hardsigmoid()
-        self.fc = nn.Linear(7*7*32, 10)
+        self.fc = nn.Linear(7 * 7 * 32, 10)
 
     def forward(self, input):
         x, slope = input
@@ -78,7 +78,7 @@ class BinaryNet(Net):
                 self.act_layer2 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer2 = Hardsigmoid()
-        self.fc = nn.Linear(7*7*32, 10)
+        self.fc = nn.Linear(7 * 7 * 32, 10)
 
     def forward(self, input):
         x, slope = input
@@ -159,5 +159,93 @@ class Flatten(nn.Module):
     # Arguments
         input: Input tensor
     """
+
     def forward(self, input):
         return input.view(input.size(0), -1)
+
+
+class BinaryMatchingNetwork(nn.Module):
+    def __init__(self, first_conv_layer, second_conv_layer, third_conv_layer, fourth_conv_layer,
+                 n: int, k: int, q: int, num_input_channels: int, mode='Deterministic', estimator='ST'):
+
+        super(BinaryMatchingNetwork, self).__init__()
+
+        assert mode in ['Deterministic', 'Stochastic']
+        assert estimator in ['ST', 'REINFORCE']
+
+        self.mode = mode
+        self.estimator = estimator
+        self.first_conv_layer = first_conv_layer
+        self.second_conv_layer = second_conv_layer
+        self.third_conv_layer = third_conv_layer
+        self.fourth_conv_layer = fourth_conv_layer
+        self.n = n
+        self.k = k
+        self.q = q
+        self.num_input_channels = num_input_channels
+
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(num_input_channels, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2))
+        if first_conv_layer:
+            if self.mode == 'Deterministic':
+                self.act_layer1 = DeterministicBinaryActivation(estimator=estimator)
+            elif self.mode == 'Stochastic':
+                self.act_layer1 = StochasticBinaryActivation(estimator=estimator)
+        else:
+            self.act_layer1 = nn.ReLU()
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(64, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2))
+        if second_conv_layer:
+            if self.mode == 'Deterministic':
+                self.act_layer2 = DeterministicBinaryActivation(estimator=estimator)
+            elif self.mode == 'Stochastic':
+                self.act_layer2 = StochasticBinaryActivation(estimator=estimator)
+        else:
+            self.act_layer2 = nn.ReLU()
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(64, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2))
+        if third_conv_layer:
+            if self.mode == 'Deterministic':
+                self.act_layer3 = DeterministicBinaryActivation(estimator=estimator)
+            elif self.mode == 'Stochastic':
+                self.act_layer3 = StochasticBinaryActivation(estimator=estimator)
+        else:
+            self.act_layer3 = nn.ReLU()
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(64, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2))
+        if fourth_conv_layer:
+            if self.mode == 'Deterministic':
+                self.act_layer4 = DeterministicBinaryActivation(estimator=estimator)
+            elif self.mode == 'Stochastic':
+                self.act_layer4 = StochasticBinaryActivation(estimator=estimator)
+        else:
+            self.act_layer4 = nn.ReLU()
+
+    def forward(self, inputs):
+        x, slope = inputs
+        if self.first_conv_layer:
+            x_layer1 = self.act_layer1((self.layer1(x), slope))
+        else:
+            x_layer1 = self.act_layer1(self.layer1(x) * slope)
+        if self.second_conv_layer:
+            x_layer2 = self.act_layer2((self.layer2(x_layer1), slope))
+        else:
+            x_layer2 = self.act_layer2(self.layer2(x_layer1) * slope)
+        if self.third_conv_layer:
+            x_layer3 = self.act_layer3((self.layer3(x_layer2), slope))
+        else:
+            x_layer3 = self.act_layer3(self.layer3(x_layer2) * slope)
+        if self.fourth_conv_layer:
+            x_layer4 = self.act_layer4((self.layer4(x_layer3), slope))
+        else:
+            x_layer4 = self.act_layer4(self.layer4(x_layer3) * slope)
+        x_out = x_layer4.view(x_layer4.size(0), -1)
+        return x_out

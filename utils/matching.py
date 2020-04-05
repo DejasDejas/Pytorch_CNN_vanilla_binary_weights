@@ -9,7 +9,9 @@ from torch.nn.utils import clip_grad_norm_
 EPSILON = 1e-8
 
 
-def matching_net_episode(use_gpu,
+def matching_net_episode(binary_model,
+                         slope,
+                         use_gpu,
                          model: Module,
                          optimiser: optimizer,
                          loss_fn: Loss,
@@ -45,7 +47,10 @@ def matching_net_episode(use_gpu,
         model.eval()
 
     # Embed all samples
-    embeddings = model.encoder(x)
+    if binary_model:
+        embeddings = model((x, slope))
+    else:
+        embeddings = model.encoder(x)
     # Samples are ordered by the NShotWrapper class as follows:
     # k lots of n support samples from a particular class
     # k lots of q query samples from those classes

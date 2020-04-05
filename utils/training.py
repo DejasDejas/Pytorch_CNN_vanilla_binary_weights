@@ -190,7 +190,7 @@ def gradient_step(model: Module, optimiser: optimizer, loss_fn: Callable, x: tor
     """
     model.train()
     optimiser.zero_grad()
-    y_pred = model(x)
+    y_pred = model((x, slope))
     loss = loss_fn(y_pred, y)
     loss.backward()
     optimiser.step()
@@ -218,7 +218,8 @@ def batch_metrics(model: Module, y_pred: torch.Tensor, y: torch.Tensor, metrics:
     return batch_logs
 
 
-def fit(use_gpu, model: Module, optimiser: optimizer, loss_fn: Callable, epochs: int, dataloader: DataLoader,
+def fit(binary_model, slope_annealing, use_gpu, model: Module, optimiser: optimizer, loss_fn: Callable,
+        epochs: int, dataloader: DataLoader,
         prepare_batch: Callable, metrics: List[Union[str, Callable]] = None, callbacks: List[Callback] = None,
         verbose: bool = True, fit_function: Callable = gradient_step, fit_function_kwargs: dict = {}):
     """Function to abstract away training loop.
@@ -257,6 +258,14 @@ def fit(use_gpu, model: Module, optimiser: optimizer, loss_fn: Callable, epochs:
         'optimiser': optimiser
     })
 
+    # Slope annealing
+    if slope_annealing:
+        def get_slope(epochs):
+            return 1.0 * (1.005 ** (epochs - 1))
+    else:
+        def get_slope(epochs):
+            return 1.0
+    global slope
     if verbose:
         print('Begin training...')
 
@@ -264,6 +273,7 @@ def fit(use_gpu, model: Module, optimiser: optimizer, loss_fn: Callable, epochs:
 
     for epoch in range(1, epochs + 1):
         callbacks.on_epoch_begin(epoch)
+        slope = get_slope(epoch)
 
         epoch_logs = {}
         for batch_index, batch in enumerate(dataloader):
@@ -273,7 +283,8 @@ def fit(use_gpu, model: Module, optimiser: optimizer, loss_fn: Callable, epochs:
 
             x, y = prepare_batch(batch)
 
-            loss, y_pred = fit_function(use_gpu, model, optimiser, loss_fn, x, y, **fit_function_kwargs)
+            loss, y_pred = fit_function(binary_model, slope, use_gpu, model, optimiser, loss_fn, x, y,
+                                        **fit_function_kwargs)
             batch_logs['loss'] = loss.item()
 
             # Loops through all metrics

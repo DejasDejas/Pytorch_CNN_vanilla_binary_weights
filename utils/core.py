@@ -124,6 +124,9 @@ class EvaluateFewShot(Callback):
     """
 
     def __init__(self,
+                 binary_model,
+                 slope,
+                 use_gpu,
                  eval_fn: Callable,
                  num_tasks: int,
                  n_shot: int,
@@ -134,6 +137,9 @@ class EvaluateFewShot(Callback):
                  prefix: str = 'val_',
                  **kwargs):
         super(EvaluateFewShot, self).__init__()
+        self.binary_model = binary_model
+        self.slope = slope
+        self.use_gpu = use_gpu
         self.eval_fn = eval_fn
         self.num_tasks = num_tasks
         self.n_shot = n_shot
@@ -157,6 +163,9 @@ class EvaluateFewShot(Callback):
             x, y = self.prepare_batch(batch)
 
             loss, y_pred = self.eval_fn(
+                self.binary_model,
+                self.slope,
+                self.use_gpu,
                 self.model,
                 self.optimiser,
                 self.loss_fn,

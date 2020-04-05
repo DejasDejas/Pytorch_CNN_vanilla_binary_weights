@@ -6,7 +6,7 @@ from torch.optim import Adam
 
 from DataLoader.dataset import OmniglotDataset
 from utils.core import prepare_nshot_task, EvaluateFewShot
-from utils.models import NoBinaryMatchingNetwork
+from utils.models import NoBinaryMatchingNetwork, BinaryMatchingNetwork
 from utils.training import fit
 from utils.callback import *
 from config import PATH
@@ -28,37 +28,45 @@ k_test = 5
 q_test = 1
 
 evaluation_episodes = 1000
-episodes_per_epoch = 100
+episodes_per_epoch = 10
 
-n_epochs = 100
+n_epochs = 2
 dataset_class = OmniglotDataset
 num_input_channels = 1
 
 param_str = f'_n={n_train}_k={k_train}_q={q_train}_' \
-            f'nv={n_test}_kv={k_test}_qv={q_test}_'\
+            f'nv={n_test}_kv={k_test}_qv={q_test}_' \
             f'dist={distance}'
 
-#########
-# Model #
-#########
-model = NoBinaryMatchingNetwork(n_train, k_train, q_train, num_input_channels)
+first_conv_layer = True
+second_conv_layer = True
+third_conv_layer = True
+fourth_conv_layer = True
+slope_annealing = True
+binary_model = True
+
+###################
+# No binary Model #
+###################
+# model = NoBinaryMatchingNetwork(n_train, k_train, q_train, num_input_channels)
+# model, use_gpu = gpu_config(model)
+# model.double()
+
+################
+# Binary Model #
+################
+model = BinaryMatchingNetwork(first_conv_layer, second_conv_layer, third_conv_layer, fourth_conv_layer,
+                              n_train, k_train, q_train, num_input_channels)
 model, use_gpu = gpu_config(model)
 model.double()
 
 ###########
 # Dataset #
 ###########
-# background_taskloader, evaluation_taskloader = get_omniglot_dataloader_v2(episodes_per_epoch, n_train, k_train,
-#                                                                          q_train, n_test, k_test, q_test,
-#                                                                          dataset_class)
-# save dataloader:
-# torch.save(background_taskloader, 'background_taskloader.pth')
-# torch.save(evaluation_taskloader, 'evaluation_taskloader.pth')
-# load dataloader
-background_taskloader = torch.load('background_taskloader.pth')
-evaluation_taskloader = torch.load('evaluation_taskloader.pth')
+background_taskloader, evaluation_taskloader = get_omniglot_dataloader_v2(episodes_per_epoch, n_train, k_train,
+                                                                          q_train, n_test, k_test, q_test,
+                                                                          dataset_class)
 
-"""
 ############
 # Training #
 ############
@@ -68,6 +76,9 @@ loss_fn = torch.nn.NLLLoss().cuda()
 
 callbacks = [
     EvaluateFewShot(
+        binary_model=binary_model,
+        slope=1.0,
+        use_gpu=use_gpu,
         eval_fn=matching_net_episode,
         num_tasks=evaluation_episodes,
         n_shot=n_test,
@@ -87,6 +98,8 @@ callbacks = [
 ]
 
 fit(
+    binary_model,
+    slope_annealing,
     use_gpu,
     model,
     optimiser,
@@ -99,4 +112,3 @@ fit(
     fit_function=matching_net_episode,
     fit_function_kwargs={'n_shot': n_train, 'k_way': k_train, 'q_queries': q_train, 'train': True, 'distance': distance}
 )
-"""
