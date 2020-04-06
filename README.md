@@ -91,7 +91,7 @@ The Omniglot data set is designed for developing more human-like learning algori
 
 ### Heatmap:
 heatmap No binary network, conv layer1:
-![heatmap binary network conv1|150x150](results/Omniglot_results/heatmapbinary_MN_first_conv_conv1.png)
+![heatmap binary network conv1|150x150](results/Omniglot_results/heatmap/heatmapbinary_MN_first_conv_conv1.png)
 
 
 # References: 
