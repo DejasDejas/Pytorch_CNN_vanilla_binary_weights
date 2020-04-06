@@ -27,7 +27,7 @@ The MNIST database of handwritten digits, available from this [link](http://yann
 
 ## Open Binary MNIST notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1-wKVHMf1GEMZhPHa3pJozFLfZLg4iNgO)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1mM9TUka5_qAS2fXnKBr2vcEb00qJfoaR)
 
 
 ## Results on MNIST:
@@ -71,7 +71,7 @@ The Omniglot data set is designed for developing more human-like learning algori
 
 ## Open binary Omniglot notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Sd1zvImf4UzTiix7mnI6Hzk7vkeKNSLB#scrollTo=XVgZBwOCIdl0)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/10O-4vXF21i9mBL9Lcu6DXPVEqX628GaV)
 
 ## Results on Omniglot:
 ### ACC: with this repository with 10 epochs.
