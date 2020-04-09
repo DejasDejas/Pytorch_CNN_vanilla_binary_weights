@@ -4,7 +4,7 @@ from utils.training import training, test, gpu_config
 from torch import load
 import torch
 
-from utils.models import NonBinaryNet, BinaryNet
+from utils.models import NoBinaryNetMnist, BinaryNet
 
 """
 Code source: https://github.com/Wizaron/binary-stochastic-neurons
@@ -46,7 +46,7 @@ if binary:
     model = BinaryNet(first_conv_layer=first_conv_layer, last_conv_layer=last_conv_layer,
                       mode=mode, estimator=estimator)
 else:
-    model = NonBinaryNet()
+    model = NoBinaryNetMnist()
     names_model = 'MNIST/NonBinaryNet'
     mode = None
     estimator = None
@@ -69,5 +69,3 @@ optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
 # test
 model.load_state_dict(load('./trained_models/' + names_model + '.pt', map_location=torch.device('cpu')))
 test_loss, test_acc = test(use_gpu, model, test_loader)
-
-

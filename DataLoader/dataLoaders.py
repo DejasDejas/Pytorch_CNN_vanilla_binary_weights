@@ -1,6 +1,7 @@
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
 from utils.core import NShotTaskSampler
+from config import PATH
 
 
 def get_mnist_dataloaders(batch_size_train, batch_size_test):
@@ -36,7 +37,7 @@ def get_mnist_dataloaders(batch_size_train, batch_size_test):
     return train_loader, valid_loader, test_loader, classes
 
 
-def get_omniglot_dataloaders_v1():
+def get_omniglot_dataloaders_v1(batch_size_train, batch_size_test):
     """
     Omniglot data set for one-shot learning. This dataset contains 1623 different handwritten characters
     from 50 different alphabets.
@@ -49,11 +50,18 @@ def get_omniglot_dataloaders_v1():
     """
     all_transforms = transforms.Compose([transforms.ToTensor()])
 
-    background_set = datasets.Omniglot(root='./data', background=True, download=True, transform=all_transforms)
-    evaluation_set = datasets.Omniglot(root='./data', background=False, download=True, transform=all_transforms)
+    background_set = datasets.Omniglot(root=PATH + '/data', background=True, download=True, transform=all_transforms)
+    # evaluation_set = datasets.Omniglot(root='./data', background=False, download=True, transform=all_transforms)
 
-    train_loader = DataLoader(background_set, shuffle=True)
-    test_loader = DataLoader(evaluation_set, shuffle=True)
+    # train_loader = DataLoader(background_set, shuffle=True)
+    # test_loader = DataLoader(evaluation_set, shuffle=True)
+
+    # to split valid data
+    n_train_examples = int((len(background_set) * 0.9/20))
+    n_valid_examples = len(background_set) - n_train_examples
+    train_data, valid_data = random_split(background_set, [n_train_examples, n_valid_examples])
+    test_loader = DataLoader(valid_data, batch_size=batch_size_test, shuffle=True)
+    train_loader = DataLoader(train_data, batch_size=batch_size_train, shuffle=True)
 
     print_data_number(train_loader, test_loader)
     return train_loader, test_loader
