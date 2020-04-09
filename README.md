@@ -27,11 +27,11 @@ The MNIST database of handwritten digits, available from this [link](http://yann
 
 ## Open Binary MNIST notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1-wKVHMf1GEMZhPHa3pJozFLfZLg4iNgO)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1mM9TUka5_qAS2fXnKBr2vcEb00qJfoaR)
 
 
 ## Results on MNIST:
-### Loss/ACC:
+### Loss/ACC: with 10 epochs.
 |               Models: 2 conv layers (29k parameters)              	|      Loss      	|  Accuracy (%)  	|
 |:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
 | No binary models                                                  	|     **0.0341**     	|      **98.79**     	|
@@ -71,22 +71,27 @@ The Omniglot data set is designed for developing more human-like learning algori
 
 ## Open binary Omniglot notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Sd1zvImf4UzTiix7mnI6Hzk7vkeKNSLB#scrollTo=XVgZBwOCIdl0)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/10O-4vXF21i9mBL9Lcu6DXPVEqX628GaV)
 
-## Results on MNIST:
-### ACC:
+## Results on Omniglot:
+### ACC: with this repository with 10 epochs.
 
-|               Models: matching Network (MN) [4]              	|     Accuracy (%)   	|    Accuracy (%)   	|
-|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| k-way                                                  	|     5     	|      **     	|
-| n-shot                                                  	|    1    	|      **     	|
-|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| No binary MN                                                  	|    1    	|      **     	|
-|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| binary MN: first conv           	|     ?     	|     ?     	|
-| binary MN: second conv           	|     ?     	|     ?     	|
-| binary MN: third conv           	|     ?     	|     ?     	|
-| binary MN: fourth conv           	|     ?     	|     ?     	|
+|               Models: matching Network (MN) [4]              	|     Accuracy (%)   	|
+|:-----------------------------------------------------------------:	|:--------------:	|
+| k-way                                                  	|     5     	|
+| n-shot                                                  	|    1    	|
+|:-----------------------------------------------------------------:	|:--------------:	|
+| No binary MN                                                  	|    **84.4**    	|
+|:-----------------------------------------------------------------:	|:--------------:	|
+| binary MN: first conv           	|     **79.6**     	|
+| binary MN: second conv           	|     **79.6**     	|
+| binary MN: third conv           	|     64.8     	|
+| binary MN: fourth conv           	|     53.6     	|
+
+
+### Heatmap:
+heatmap No binary network, conv layer1:
+![heatmap binary network conv1|150x150](results/Omniglot_results/heatmap/heatmapbinary_MN_first_conv_conv1.png)
 
 
 # References: 
