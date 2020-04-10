@@ -75,7 +75,8 @@ def train(use_gpu, model, train_loader, optimizer, slope):
     return train_loss, train_acc
 
 
-def training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader, optimizer, plot_result,
+def training(path_save_plot, path_save_model, use_gpu, model, names_model, nb_epoch, train_loader,
+             valid_loader, optimizer, plot_result,
              slope_annealing):
     # Slope annealing
     if slope_annealing:
@@ -105,7 +106,7 @@ def training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader, 
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            save(model.state_dict(), PATH + '/trained_models/' + names_model + '.pt')
+            save(model.state_dict(), PATH + path_save_model + names_model + '.pt')
 
         end_time = time.time()
         epoch_minutes, epoch_secs = epoch_time(start_time, end_time)
@@ -115,7 +116,8 @@ def training(use_gpu, model, names_model, nb_epoch, train_loader, valid_loader, 
         print(f'\t Val. Loss: {valid_loss:.3f} |  Val. Acc: {valid_acc * 100:.2f}%')
 
     if plot_result:
-        plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_values_valid, names_model)
+        plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_values_valid,
+                      path_save_plot, names_model)
     return loss_values_train, acc_values_train, loss_values_valid, acc_values_valid
 
 
@@ -156,7 +158,8 @@ def epoch_time(start_time, end_time):
     return elapsed_minutes, elapsed_secs
 
 
-def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_values_valid, name_model):
+def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_values_valid,
+                  path_save_plot, name_model):
     # summarize history for accuracy
     plt.plot(np.array(acc_values_train))
     plt.plot(np.array(acc_values_valid))
@@ -165,11 +168,7 @@ def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_va
     plt.xlabel('epoch')
     plt.xlim(0, 10)
     plt.legend(['train', 'val'], loc='upper left')
-<<<<<<< HEAD
-    plt.savefig('results/Omniglot_results/plot_acc_loss/' + name_model + 'acc_model_.png')
-=======
-    plt.savefig('results/MNIST_results/results_loss_acc/acc_model_' + name_model + '.png')
->>>>>>> ac3dec6fd4eeba48deaaa7915c0805574bc8f008
+    plt.savefig(path_save_plot + name_model + '_acc.png')
     plt.show()
     # summarize history for loss
     plt.plot(np.array(loss_values_train))
@@ -179,11 +178,7 @@ def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_va
     plt.xlabel('epoch')
     plt.xlim(0, 10)
     plt.legend(['train', 'test'], loc='upper left')
-<<<<<<< HEAD
-    plt.savefig('results/Omniglot_results/plot_acc_loss/' + name_model + 'loss_model_.png')
-=======
-    plt.savefig('results/MNIST_results/results_loss_acc/loss_model_' + name_model + '.png')
->>>>>>> ac3dec6fd4eeba48deaaa7915c0805574bc8f008
+    plt.savefig(path_save_plot + name_model + '_loss.png')
     plt.show()
 
     return
@@ -276,6 +271,7 @@ def fit(binary_model, slope_annealing, use_gpu, model: Module, optimiser: optimi
         def get_slope(epochs):
             return 1.0
     global slope
+
     if verbose:
         print('Begin training...')
 

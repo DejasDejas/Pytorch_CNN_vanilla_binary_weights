@@ -18,7 +18,6 @@ class NoBinaryNetMnist(Net):
 
     def __init__(self):
         super(NoBinaryNetMnist, self).__init__()
-<<<<<<< HEAD
 
         self.layer1 = nn.Conv2d(1, 16, kernel_size=5, padding=2)
         self.batchnorm1 = nn.BatchNorm2d(16)
@@ -35,7 +34,6 @@ class NoBinaryNetMnist(Net):
         x, slope = input
         x_layer1 = self.act_layer1(self.maxpool1(self.batchnorm1(self.layer1(x) * slope)))
         x_layer2 = self.act_layer2(self.maxpool2(self.batchnorm2(self.layer2(x_layer1))))
-=======
 
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=5, padding=2),
@@ -53,7 +51,6 @@ class NoBinaryNetMnist(Net):
         x, slope = input
         x_layer1 = self.act_layer1(self.layer1(x) * slope)
         x_layer2 = self.act_layer2(self.layer2(x_layer1))
->>>>>>> ac3dec6fd4eeba48deaaa7915c0805574bc8f008
         x_layer2 = x_layer2.view(x_layer2.size(0), -1)
         x_fc = self.fc(x_layer2)
         x_out = F.log_softmax(x_fc, dim=1)
@@ -216,7 +213,6 @@ class BinaryNet(Net):
         x_fc = self.fc(x_layer2)
         x_out = F.log_softmax(x_fc, dim=1)
         return x_out
-<<<<<<< HEAD
         
 
 class NoBinaryNetOmniglotClassification(Net):
@@ -335,8 +331,6 @@ class BinaryNetOmniglotClassification(Net):
         x_fc = self.fc(x_layer4)
         x_out = F.log_softmax(x_fc, dim=1)
         return x_out
-=======
->>>>>>> ac3dec6fd4eeba48deaaa7915c0805574bc8f008
 
 
 class NoBinaryMatchingNetwork(nn.Module):
