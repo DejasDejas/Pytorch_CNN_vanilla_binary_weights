@@ -19,128 +19,23 @@ class NoBinaryNetMnist(Net):
     def __init__(self):
         super(NoBinaryNetMnist, self).__init__()
 
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=5, padding=2),
-            nn.BatchNorm2d(16),
-            nn.MaxPool2d(2))
+        self.layer1 = nn.Conv2d(1, 16, kernel_size=5, padding=2)
+        self.batchnorm1 = nn.BatchNorm2d(16)
+        self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer1 = Hardsigmoid()
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2))
+        self.layer2 = nn.Conv2d(16, 32, kernel_size=5, padding=2)
+        self.batchnorm2 = nn.BatchNorm2d(32)
+        self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer2 = Hardsigmoid()
         self.fc = nn.Linear(7 * 7 * 32, 10)
 
+
     def forward(self, input):
         x, slope = input
-        x_layer1 = self.act_layer1(self.layer1(x) * slope)
-        x_layer2 = self.act_layer2(self.layer2(x_layer1))
+        x_layer1 = self.act_layer1(self.maxpool1(self.batchnorm1(self.layer1(x) * slope)))
+        x_layer2 = self.act_layer2(self.maxpool2(self.batchnorm2(self.layer2(x_layer1))))
         x_layer2 = x_layer2.view(x_layer2.size(0), -1)
         x_fc = self.fc(x_layer2)
-        x_out = F.log_softmax(x_fc, dim=1)
-        return x_out
-
-
-class NoBinaryNetOmniglotClassification(Net):
-
-    def __init__(self):
-        super(NoBinaryNetOmniglotClassification, self).__init__()
-
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2))
-        self.act_layer1 = Hardsigmoid()
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2))
-        self.act_layer2 = Hardsigmoid()
-        self.layer3 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2))
-        self.act_layer3 = Hardsigmoid()
-        self.fc = nn.Linear(13 * 13 * 32, 1623)
-
-    def forward(self, input):
-        x, slope = input
-        x_layer1 = self.act_layer1(self.layer1(x) * slope)
-        x_layer2 = self.act_layer2(self.layer2(x_layer1))
-        x_layer3 = self.act_layer3(self.layer3(x_layer2))
-        x_layer3 = x_layer3.view(x_layer3.size(0), -1)
-        x_fc = self.fc(x_layer3)
-        x_out = F.log_softmax(x_fc, dim=1)
-        return x_out
-
-
-class BinaryNetOmniglotClassif(Net):
-
-    def __init__(self, first_conv_layer, second_conv_layer, third_conv_layer, mode='Deterministic', estimator='ST'):
-        super(BinaryNetOmniglotClassif, self).__init__()
-
-        assert mode in ['Deterministic', 'Stochastic']
-        assert estimator in ['ST', 'REINFORCE']
-        # if mode == 'Deterministic':
-        #    assert estimator == 'ST'
-
-        self.mode = mode
-        self.estimator = estimator
-        self.first_conv_layer = first_conv_layer
-        self.second_conv_layer = second_conv_layer
-        self.third_conv_layer = third_conv_layer
-
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2))
-        if self.first_conv_layer:
-            if self.mode == 'Deterministic':
-                self.act_layer1 = DeterministicBinaryActivation(estimator=estimator)
-            elif self.mode == 'Stochastic':
-                self.act_layer1 = StochasticBinaryActivation(estimator=estimator)
-        else:
-            self.act_layer1 = Hardsigmoid()
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2))
-        if self.second_conv_layer:
-            if self.mode == 'Deterministic':
-                self.act_layer2 = DeterministicBinaryActivation(estimator=estimator)
-            elif self.mode == 'Stochastic':
-                self.act_layer2 = StochasticBinaryActivation(estimator=estimator)
-        else:
-            self.act_layer2 = Hardsigmoid()
-        self.layer3 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2))
-        if self.third_conv_layer:
-            if self.mode == 'Deterministic':
-                self.act_layer3 = DeterministicBinaryActivation(estimator=estimator)
-            elif self.mode == 'Stochastic':
-                self.act_layer3 = StochasticBinaryActivation(estimator=estimator)
-        else:
-            self.act_layer3 = Hardsigmoid()
-        self.fc = nn.Linear(13 * 13 * 32, 1623)
-
-    def forward(self, input):
-        x, slope = input
-        if self.first_conv_layer:
-            x_layer1 = self.act_layer1((self.layer1(x), slope))
-        else:
-            x_layer1 = self.act_layer1(self.layer1(x) * slope)
-        if self.second_conv_layer:
-            x_layer2 = self.act_layer2((self.layer2(x_layer1), slope))
-        else:
-            x_layer2 = self.act_layer2(self.layer2(x_layer1) * slope)
-        if self.third_conv_layer:
-            x_layer3 = self.act_layer3((self.layer3(x_layer2), slope))
-        else:
-            x_layer3 = self.act_layer3(self.layer3(x_layer2) * slope)
-        x_layer3 = x_layer3.view(x_layer3.size(0), -1)
-        x_fc = self.fc(x_layer3)
         x_out = F.log_softmax(x_fc, dim=1)
         return x_out
 
@@ -160,10 +55,9 @@ class BinaryNet(Net):
         self.first_conv_layer = first_conv_layer
         self.last_conv_layer = last_conv_layer
 
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=5, padding=2),
-            nn.BatchNorm2d(16),
-            nn.MaxPool2d(2))
+        self.layer1 = nn.Conv2d(1, 16, kernel_size=5, padding=2)
+        self.batchnorm1 = nn.BatchNorm2d(16)
+        self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         if self.first_conv_layer:
             if self.mode == 'Deterministic':
                 self.act_layer1 = DeterministicBinaryActivation(estimator=estimator)
@@ -171,10 +65,9 @@ class BinaryNet(Net):
                 self.act_layer1 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer1 = Hardsigmoid()
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2))
+        self.layer2 = nn.Conv2d(16, 32, kernel_size=5, padding=2)
+        self.batchnorm2 = nn.BatchNorm2d(32)
+        self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         if self.last_conv_layer:
             if self.mode == 'Deterministic':
                 self.act_layer2 = DeterministicBinaryActivation(estimator=estimator)
@@ -187,16 +80,133 @@ class BinaryNet(Net):
     def forward(self, input):
         x, slope = input
         if self.first_conv_layer:
-            x_layer1 = self.act_layer1((self.layer1(x), slope))
+            x_layer1 = self.act_layer1(((self.maxpool1(self.batchnorm1(self.layer1(x)))), slope))
         else:
-            x_layer1 = self.act_layer1(self.layer1(x) * slope)
+            x_layer1 = self.act_layer1(self.maxpool1(self.batchnorm1(self.layer1(x) * slope)))
         if self.last_conv_layer:
-            x_layer2 = self.act_layer2((self.layer2(x_layer1), slope))
+            x_layer2 = self.act_layer2(((self.maxpool2(self.batchnorm2(self.layer2(x_layer1)))), slope))
         else:
-            x_layer2 = self.act_layer2(self.layer2(x_layer1) * slope)
+            x_layer2 = self.act_layer2(self.maxpool2(self.batchnorm2(self.layer2(x_layer1) * slope)))
         x_layer2 = x_layer2.view(x_layer2.size(0), -1)
-
         x_fc = self.fc(x_layer2)
+        x_out = F.log_softmax(x_fc, dim=1)
+        return x_out
+        
+
+class NoBinaryNetOmniglotClassification(Net):
+
+    def __init__(self):
+        super(NoBinaryNetOmniglotClassification, self).__init__()
+
+        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1)
+        self.batchNorm1 = nn.BatchNorm2d(64)
+        self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.act_layer1 = nn.ReLU()
+        self.layer2 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.batchNorm2 = nn.BatchNorm2d(64)
+        self.maxPool2 = nn.MaxPool2d(kernel_size=2, stride=2)            
+        self.act_layer2 = nn.ReLU()
+        self.layer3 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.batchNorm3 = nn.BatchNorm2d(64)
+        self.maxPool3 = nn.MaxPool2d(kernel_size=2, stride=2)  
+        self.act_layer3 = nn.ReLU()
+        self.layer4 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.batchNorm4 = nn.BatchNorm2d(64)
+        self.maxPool4 = nn.MaxPool2d(kernel_size=2, stride=2)              
+        self.act_layer4 = nn.ReLU()
+        self.fc = nn.Linear(6 * 6 * 64, 1623)
+
+    def forward(self, input):
+        x, slope = input
+        x_layer1 = self.act_layer1(self.maxPool1(self.batchNorm1(self.layer1(x) * slope)))
+        x_layer2 = self.act_layer2(self.maxPool2(self.batchNorm2(self.layer2(x_layer1))))
+        x_layer3 = self.act_layer3(self.maxPool3(self.batchNorm3(self.layer3(x_layer2))))
+        x_layer4 = self.act_layer4(self.maxPool4(self.batchNorm4(self.layer4(x_layer3))))
+        x_layer4 = x_layer4.view(x_layer4.size(0), -1)
+        x_fc = self.fc(x_layer4)
+        x_out = F.log_softmax(x_fc, dim=1)
+        return x_out
+
+
+class BinaryNetOmniglotClassification(Net):
+
+    def __init__(self, first_conv_layer, second_conv_layer, third_conv_layer, fourth_conv_layer, mode='Deterministic', estimator='ST'):
+        super(BinaryNetOmniglotClassification, self).__init__()
+
+        assert mode in ['Deterministic', 'Stochastic']
+        assert estimator in ['ST', 'REINFORCE']
+        # if mode == 'Deterministic':
+        #    assert estimator == 'ST'
+
+        self.mode = mode
+        self.estimator = estimator
+        self.first_conv_layer = first_conv_layer
+        self.second_conv_layer = second_conv_layer
+        self.third_conv_layer = third_conv_layer
+        self.fourth_conv_layer = fourth_conv_layer
+
+        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1)
+        self.batchNorm1 = nn.BatchNorm2d(64)
+        self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        if self.first_conv_layer:
+            if self.mode == 'Deterministic':
+                self.act_layer1 = DeterministicBinaryActivation(estimator=estimator)
+            elif self.mode == 'Stochastic':
+                self.act_layer1 = StochasticBinaryActivation(estimator=estimator)
+        else:
+            self.act_layer1 = nn.ReLU()
+        self.layer2 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.batchNorm2 = nn.BatchNorm2d(64)
+        self.maxPool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        if self.second_conv_layer:
+            if self.mode == 'Deterministic':
+                self.act_layer2 = DeterministicBinaryActivation(estimator=estimator)
+            elif self.mode == 'Stochastic':
+                self.act_layer2 = StochasticBinaryActivation(estimator=estimator)
+        else:
+            self.act_layer2 = nn.ReLU()
+        self.layer3 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.batchNorm3 = nn.BatchNorm2d(64)
+        self.maxPool3 = nn.MaxPool2d(kernel_size=2, stride=2) 
+        if self.third_conv_layer:
+            if self.mode == 'Deterministic':
+                self.act_layer3 = DeterministicBinaryActivation(estimator=estimator)
+            elif self.mode == 'Stochastic':
+                self.act_layer3 = StochasticBinaryActivation(estimator=estimator)
+        else:
+            self.act_layer3 = nn.ReLU()
+        self.layer4 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.batchNorm4 = nn.BatchNorm2d(64)
+        self.maxPool4 = nn.MaxPool2d(kernel_size=2, stride=2)   
+        if self.fourth_conv_layer:
+            if self.mode == 'Deterministic':
+                self.act_layer4 = DeterministicBinaryActivation(estimator=estimator)
+            elif self.mode == 'Stochastic':
+                self.act_layer4 = StochasticBinaryActivation(estimator=estimator)
+        else:
+            self.act_layer4 = nn.ReLU()
+        self.fc = nn.Linear(6 * 6 * 64, 1623)
+
+    def forward(self, input):
+        x, slope = input
+        if self.first_conv_layer:
+            x_layer1 = self.act_layer1(((self.maxPool1(self.batchNorm1(self.layer1(x)))), slope))
+        else:
+            x_layer1 = self.act_layer1(self.maxPool1(self.batchNorm1(self.layer1(x) * slope)))
+        if self.second_conv_layer:
+            x_layer2 = self.act_layer2(((self.maxPool2(self.batchNorm2(self.layer2(x_layer1)))), slope))
+        else:
+            x_layer2 = self.act_layer2(self.maxPool2(self.batchNorm2(self.layer2(x_layer1) * slope)))
+        if self.third_conv_layer:
+            x_layer3 = self.act_layer3(((self.maxPool3(self.batchNorm3(self.layer3(x_layer2)))), slope))
+        else:
+            x_layer3 = self.act_layer3(self.maxPool3(self.batchNorm3(self.layer3(x_layer2) * slope)))
+        if self.fourth_conv_layer:
+            x_layer4 = self.act_layer4(((self.maxPool4(self.batchNorm4(self.layer4(x_layer3)))), slope))
+        else:
+            x_layer4 = self.act_layer4(self.maxPool4(self.batchNorm4(self.layer4(x_layer3) * slope)))
+        x_layer4 = x_layer4.view(x_layer4.size(0), -1)
+        x_fc = self.fc(x_layer4)
         x_out = F.log_softmax(x_fc, dim=1)
         return x_out
 

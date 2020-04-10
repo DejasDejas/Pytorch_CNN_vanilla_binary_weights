@@ -54,6 +54,7 @@ def train(use_gpu, model, train_loader, optimizer, slope):
     train_acc = 0
 
     for batch_idx, (data, target) in enumerate(train_loader):
+        # print('batch: {}/{}'.format(batch_idx, len(train_loader)))
         if use_gpu:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data), Variable(target)
@@ -164,7 +165,7 @@ def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_va
     plt.xlabel('epoch')
     plt.xlim(0, 10)
     plt.legend(['train', 'val'], loc='upper left')
-    plt.savefig('results/MNIST_results/results_loss_acc/acc_model_' + name_model + '.png')
+    plt.savefig('results/Omniglot_results/plot_acc_loss/' + name_model + 'acc_model_.png')
     plt.show()
     # summarize history for loss
     plt.plot(np.array(loss_values_train))
@@ -174,7 +175,7 @@ def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_va
     plt.xlabel('epoch')
     plt.xlim(0, 10)
     plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig('results/MNIST_results/results_loss_acc/loss_model_' + name_model + '.png')
+    plt.savefig('results/Omniglot_results/plot_acc_loss/' + name_model + 'loss_model_.png')
     plt.show()
 
     return
