@@ -165,7 +165,11 @@ def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_va
     plt.xlabel('epoch')
     plt.xlim(0, 10)
     plt.legend(['train', 'val'], loc='upper left')
+<<<<<<< HEAD
     plt.savefig('results/Omniglot_results/plot_acc_loss/' + name_model + 'acc_model_.png')
+=======
+    plt.savefig('results/MNIST_results/results_loss_acc/acc_model_' + name_model + '.png')
+>>>>>>> ac3dec6fd4eeba48deaaa7915c0805574bc8f008
     plt.show()
     # summarize history for loss
     plt.plot(np.array(loss_values_train))
@@ -175,7 +179,11 @@ def plot_loss_acc(loss_values_train, acc_values_train, loss_values_valid, acc_va
     plt.xlabel('epoch')
     plt.xlim(0, 10)
     plt.legend(['train', 'test'], loc='upper left')
+<<<<<<< HEAD
     plt.savefig('results/Omniglot_results/plot_acc_loss/' + name_model + 'loss_model_.png')
+=======
+    plt.savefig('results/MNIST_results/results_loss_acc/loss_model_' + name_model + '.png')
+>>>>>>> ac3dec6fd4eeba48deaaa7915c0805574bc8f008
     plt.show()
 
     return
