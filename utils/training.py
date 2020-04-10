@@ -106,7 +106,7 @@ def training(path_save_plot, path_save_model, use_gpu, model, names_model, nb_ep
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            save(model.state_dict(), PATH + path_save_model + names_model + '.pt')
+            save(model.state_dict(), path_save_model + names_model + '.pt')
 
         end_time = time.time()
         epoch_minutes, epoch_secs = epoch_time(start_time, end_time)

@@ -1,3 +1,8 @@
+import sys
+# sys.path.append('/data1/data/expes/julien.dejasmin/Thesis/Binary_weights/MNIST_binary_V2')
+import os
+sys.path.append(os.path.dirname(os.path.realpath('')))
+
 import torch.optim as optim
 from DataLoader.dataLoaders import get_omniglot_dataloaders_v1
 from utils.models import NoBinaryNetOmniglotClassification, BinaryNetOmniglotClassification
@@ -8,9 +13,9 @@ from utils.training import training
 from config import PATH
 
 # parameters default values
-lr = 1e-3
+lr = 1e-5
 # momentum = 0.9
-nb_epoch = 50
+nb_epoch = 30
 batch_size_train = 64
 batch_size_test = 128
 
@@ -18,11 +23,11 @@ slope_annealing = True
 reinforce = False
 stochastic = True
 binary = True
-plot_result = False
-first_conv_layer = True
+plot_result = True
+first_conv_layer = False
 second_conv_layer = False
 third_conv_layer = False
-fourth_conv_layer = False
+fourth_conv_layer = True
 omniglot = True
 
 
@@ -66,8 +71,8 @@ train_loader, test_loader = get_omniglot_dataloaders_v1(batch_size_train, batch_
 # visualize example
 # show_som_examples(train_loader)
 
-path_save_plot = '/results/Omniglot_classif/plot_acc_loss/'
-path_save_model = '/trained_models/Omniglot_classif/'
+path_save_plot = PATH + '/results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
+path_save_model = PATH + '/trained_models/Omniglot_classif/'
 
 # train
 """
@@ -76,7 +81,7 @@ callbacks = [
         filepath=PATH + path_save_model + names_model + '.pth',
         monitor=f'val_classif_{names_model}acc',
     ),
-    ReduceLROnPlateau(patience=20, factor=0.5, monitor=f'val_classif_{names_model}_acc'),
+ lassifi_classif_{names_model}_acc'),
     CSVLogger(PATH + f'/logs/omniglot_classif/{names_model}.csv'),
 ]
 """
