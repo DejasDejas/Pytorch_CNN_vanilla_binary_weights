@@ -1,6 +1,6 @@
 In this repository we want study the effect of binary activations in convolutional layer.
 
-We study these binary activations with two datasets: [Part1: MNIST](#part1-mnist-with-binary-activations), [Part1: Omniglot Classification](#part2-omniglot-classification-with-binary-activations) and [Part3: Omniglot Few shot](#part3-omniglot-few-shot-with-binary-activations).
+We study these binary activations with two datasets: [Part1: MNIST](#part1-mnist-with-binary-activations), [Part2: Omniglot Classification](#part2-omniglot-classification-with-binary-activations) and [Part3: Omniglot Few shot](#part3-omniglot-few-shot-with-binary-activations).
 
 This repository uses Pytorch library.
 
@@ -137,7 +137,7 @@ In this part, we present results obtained with [Matching Networks for One Shot L
 ### Heatmap:
 
 heatmap No binary network, conv layer1, image superpose:
-![heatmap no binary network conv1 superpose|150x150](results/Omniglot_results/heatmap/binary_MN_first_conv_conv1_superpose.png.png)
+![heatmap no binary network conv1 superpose|150x150](results/Omniglot_results/heatmap/binary_MN_first_conv_conv1_superpose.png)
 
 heatmap binary network, conv layer1:
 ![heatmap binary network conv1|150x150](results/Omniglot_results/heatmap/binary_MN_first_conv_conv1.png)
@@ -150,6 +150,4 @@ heatmap binary network, conv layer1:
 * [4]: ['Matching Networks for One Shot Learning', Vinyals et al (Dec 2017)](https://arxiv.org/pdf/1606.04080.pdf).
 * [5]: [The MNIST Database](http://yann.lecun.com/exdb/mnist/).
 * [6]: ['Omniglot data set for one-shot learning'](https://github.com/brendenlake/omniglot).
-* [7]: ['FlashTorch'](https://github.com/MisaOgura/flashtorch).
-
-
+* [7]: ['Flashtorch '](https://github.com/MisaOgura/flashtorch).
