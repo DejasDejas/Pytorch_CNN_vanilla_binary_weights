@@ -27,7 +27,7 @@ The MNIST database of handwritten digits, available from this [link](http://yann
 
 ## Open Binary MNIST notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/15a7clA5VgYA50BsiE565Ox6fd6c0apmO#scrollTo=bNJzdLm4a0ol)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rStRyIPL38GjhJYJEXs9tRLa_EtzZCWF)
 
 
 ## Results on MNIST:
@@ -79,7 +79,7 @@ The Omniglot data set is designed for developing more human-like learning algori
 
 ## Open Binary MNIST notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1NrtqwySmIrjIjPkT-MWF0esSmLkFgHdf#scrollTo=FnoWIHotp2MN)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1QptmwiKNH_5oigEf5Y3qV2DErdHvDcsK)
 
 ## Results on MNIST:
 ### Loss/ACC: with 10 epochs.
@@ -116,7 +116,7 @@ In this part, we present results obtained with [Matching Networks for One Shot L
 
 ## Open binary few shot Omniglot notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/10O-4vXF21i9mBL9Lcu6DXPVEqX628GaV)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1GW_yLVN62nRDgQrPAUkeM1b7yGSGSWg5)
 
 ## Results on Omniglot:
 ### ACC: with this repository with 10 epochs.
