@@ -1,6 +1,6 @@
 In this repository we want study the effect of binary activations in convolutional layer.
 
-We study these binary activations with two datasets: [Part1: MNIST](#part1-mnist-with-binary-activations) and [Part2: Omniglot](#part2-omniglot-with-binary-activations).
+We study these binary activations with two datasets: [Part1: MNIST](#part1-mnist-with-binary-activations), [Part1: Omniglot Classification](#part2-omniglot-classification-with-binary-activations) and [Part3: Omniglot Few shot](#part3-omniglot-few-shot-with-binary-activations).
 
 This repository uses Pytorch library.
 
@@ -27,7 +27,7 @@ The MNIST database of handwritten digits, available from this [link](http://yann
 
 ## Open Binary MNIST notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1mM9TUka5_qAS2fXnKBr2vcEb00qJfoaR)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/15a7clA5VgYA50BsiE565Ox6fd6c0apmO#scrollTo=bNJzdLm4a0ol)
 
 
 ## Results on MNIST:
@@ -51,25 +51,70 @@ The MNIST database of handwritten digits, available from this [link](http://yann
 | Deterministic binary model in the both conv layer with REINFORCE  	|     0.8538     	|      93.40     	|
 
 ### Heatmap:
-heatmap No binary network, conv layer1:
+Visuallize regions of a specific image that are more significant for prediction:
+
+Heatmap No binary network, conv layer1:
 ![heatmap no binary network conv1|150x150](results/MNIST_results/heatmap_png/heatmapNonBinaryNet_conv1.png)
 
 heatmap Stochastic binary network with ST, conv layer1:
 ![heatmap binary network Stochastic ST conv1|150x150](results/MNIST_results/heatmap_png/heatmapStochastic_ST_first_conv_binary_conv1.png)
 
+### Images that maximizes activations for a specific filter in a layer of MNIST model:
 
-# PART2: Omniglot with binary activations:
-Most of the code in this section comes from this repository: [Github: oscarknagg/few-shot](https://github.com/oscarknagg/few-shot). [3]
+This visualizations made with help of Flashtorch code [7].
 
-In this part, we present results obtained with [Matching Networks for One Shot Learning](https://arxiv.org/pdf/1606.04080.pdf) (Vinyals et al). [4]
+Grid of some iamges that maximizes some filter in second layer of no binary MNIST model:
+![grid images max filter no binary model MNIST](results/MNIST_results/Image_max_filter/no_binary_image_maximize_filter_layer2_MNIST.png)
+
+Grid of some iamges that maximizes some filter in second layer of binary MNIST model:
+![grid images max filter binary model MNIST](results/MNIST_results/Image_max_filter/binary_image_maximize_filter_layer2_MNIST.png)
+
+
+# PART2: Omniglot Classification with binary activations:
 
 ## Dataset:
 Downlad from [Omniglot data set for one-shot learning](https://github.com/brendenlake/omniglot).
 
 The Omniglot data set is designed for developing more human-like learning algorithms. It contains 1623 different handwritten characters from 50 different alphabets. Each of the 1623 characters was drawn online via Amazon's Mechanical Turk by 20 different people. Each image is paired with stroke data, a sequences of [x,y,t] coordinates with time (t) in milliseconds. [6]
 
+## Open Binary MNIST notebook:
 
-## Open binary Omniglot notebook:
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1NrtqwySmIrjIjPkT-MWF0esSmLkFgHdf#scrollTo=FnoWIHotp2MN)
+
+## Results on MNIST:
+### Loss/ACC: with 10 epochs.
+|               Models: 4 conv layers          	     	|  Accuracy (%)  	|
+|:-----------------------------------------------------------------:	|:--------------:	|
+| No binary models                                                  	|      **96.47**   	|
+|:-----------------------------------------------------------------:	|:--------------:	|
+| Stochastic binary model in the first conv layer with ST           	|    **96.21**     	|
+| Stochastic binary model in the second conv layer with ST            	|      19.50    	|
+| Stochastic binary model in the third conv layer with ST                	|    15.66    	|
+| Stochastic binary model in the fourth conv layer with ST        	|    16.03  	|
+
+### Images that maximizes activations for a specific filter in a layer of Omniglot model: [7]
+
+Grid of some iamges that maximizes some filter in second layer of no binary Omniglot model:
+![grid images max filter no binary model Omniglot layer2](results/Omniglot_results/regions/image_max_activation/no_binary_image_maximize_filter_layer2_Omniglot.png)
+
+Grid of some iamges that maximizes some filter in second layer of binary Omniglot model:
+![grid images max filter binary model Omniglot layer2](results/Omniglot_results/regions/image_max_activation/binary_image_maximize_filter_layer2_Omniglot.png)
+
+Grid of some iamges that maximizes some filter in third layer of no binary Omniglot model:
+![grid images max filter no binary model Omniglot layer3](results/Omniglot_results/regions/image_max_activation/no_binary_image_maximize_filter_layer3_Omniglot.png)
+
+Grid of some iamges that maximizes some filter in third layer of binary Omniglot model:
+![grid images max filter binary model Omniglot layer3](results/Omniglot_results/regions/image_max_activation/binary_image_maximize_filter_layer3_Omniglot.png)
+
+
+# PART3: Omniglot Few Shot with binary activations:
+
+Most of the code in this section comes from this repository: [Github: oscarknagg/few-shot](https://github.com/oscarknagg/few-shot). [3]
+
+In this part, we present results obtained with [Matching Networks for One Shot Learning](https://arxiv.org/pdf/1606.04080.pdf) (Vinyals et al). [4]
+
+
+## Open binary few shot Omniglot notebook:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/10O-4vXF21i9mBL9Lcu6DXPVEqX628GaV)
 
@@ -90,8 +135,12 @@ The Omniglot data set is designed for developing more human-like learning algori
 
 
 ### Heatmap:
-heatmap No binary network, conv layer1:
-![heatmap binary network conv1|150x150](results/Omniglot_results/heatmap/heatmapbinary_MN_first_conv_conv1.png)
+
+heatmap No binary network, conv layer1, image superpose:
+![heatmap no binary network conv1 superpose|150x150](results/Omniglot_results/heatmap/binary_MN_first_conv_conv1_superpose.png.png)
+
+heatmap binary network, conv layer1:
+![heatmap binary network conv1|150x150](results/Omniglot_results/heatmap/binary_MN_first_conv_conv1.png)
 
 
 # References: 
@@ -101,5 +150,6 @@ heatmap No binary network, conv layer1:
 * [4]: ['Matching Networks for One Shot Learning', Vinyals et al (Dec 2017)](https://arxiv.org/pdf/1606.04080.pdf).
 * [5]: [The MNIST Database](http://yann.lecun.com/exdb/mnist/).
 * [6]: ['Omniglot data set for one-shot learning'](https://github.com/brendenlake/omniglot).
+* [7]: ['FlashTorch'](https://github.com/MisaOgura/flashtorch).
 
 
