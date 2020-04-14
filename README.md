@@ -67,7 +67,7 @@ Grid of some iamges that maximizes some filter in second layer of no binary MNIS
 ![grid images max filter no binary model MNIST](results/MNIST_results/Image_max_filter/no_binary_image_maximize_filter_layer2_MNIST.png)
 
 Grid of some iamges that maximizes some filter in second layer of binary MNIST model:
-![grid images max filter binary model MNIST](results/MNIST_results/Image_max_filter/binary_image_maximize_filter_layer2_MNIST.png)
+![grid images max filter binary model MNIST](results/MNIST_results/Image_max_filter/binary_image_maximize_filter_layer2_MNIST)
 
 
 # PART2: Omniglot Classification with binary activations:
