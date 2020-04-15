@@ -1,9 +1,64 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 from utils.activations import DeterministicBinaryActivation, StochasticBinaryActivation
 from utils.functions import Hardsigmoid
 
+
+# loading the saved model
+def fetch_last_checkpoint_model_filename(model_save_path):
+    import os
+    checkpoint_files = os.listdir(model_save_path)
+    checkpoint_files = [f for f in checkpoint_files if '.pth' in f]
+    checkpoint_iter = [
+        int(x.split('_')[-1].split('.')[0])
+        for x in checkpoint_files]
+    last_idx = np.array(checkpoint_iter).argmax()
+    return os.path.join(model_save_path, checkpoint_files[last_idx])
+    
+    
+# Model, activation type, estimator type
+def get_my_model_MNIST(binary, stochastic=True, reinforce=False, first_conv_layer=True,
+                 last_conv_layer=False):
+                     
+    # Slope annealing
+    if binary:
+        def get_slope(number_epoch): return 1.0 * (1.005 ** (number_epoch - 1))
+    else:
+        def get_slope(number_epoch): return 1.0
+
+    if binary:
+        if stochastic:
+            mode = 'Stochastic'
+            names_model = 'Stochastic'
+        else:
+          
+            mode = 'Deterministic'
+            names_model = 'Deterministic'
+        if reinforce:
+            estimator = 'REINFORCE'
+            names_model += '_REINFORCE'
+        else:
+            estimator = 'ST'
+            names_model += '_ST'
+        if first_conv_layer:
+            names_model += '_first_conv_binary'
+        if last_conv_layer:
+            names_model += '_last_conv_binary'
+        model = BinaryNetMNIST(first_conv_layer=first_conv_layer, 
+                          last_conv_layer=last_conv_layer, mode=mode, 
+                          estimator=estimator)
+    else:
+        model = NoBinaryNetMnist()
+        names_model = 'NonBinaryNet'
+        mode = None
+        estimator = None
+
+    # gpu config:
+    # model, use_gpu = gpu_config(model)
+    return model, names_model
+    
 
 class Net(nn.Module):
 
@@ -19,20 +74,21 @@ class NoBinaryNetMnist(Net):
     def __init__(self):
         super(NoBinaryNetMnist, self).__init__()
 
-        self.layer1 = nn.Conv2d(1, 16, kernel_size=5, padding=2)
-        self.batchnorm1 = nn.BatchNorm2d(16)
+        self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1)
+        self.batchnorm1 = nn.BatchNorm2d(10)
         self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer1 = Hardsigmoid()
-        self.layer2 = nn.Conv2d(16, 32, kernel_size=5, padding=2)
-        self.batchnorm2 = nn.BatchNorm2d(32)
+        self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1)
+        self.batchnorm2 = nn.BatchNorm2d(20)
         self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer2 = Hardsigmoid()
-        self.fc = nn.Linear(7 * 7 * 32, 10)
+        self.fc = nn.Linear(7*7*20, 10)
 
 
 
     def forward(self, input):
-        x, slope = input
+        x = input
+        slope = 1.0
         x_layer1 = self.act_layer1(self.maxpool1(self.batchnorm1(self.layer1(x) * slope)))
         x_layer2 = self.act_layer2(self.maxpool2(self.batchnorm2(self.layer2(x_layer1) * slope)))
         x_layer2 = x_layer2.view(x_layer2.size(0), -1)
@@ -44,7 +100,7 @@ class NoBinaryNetMnist(Net):
 class BinaryNetMNIST(Net):
 
     def __init__(self, first_conv_layer, last_conv_layer, mode='Deterministic', estimator='ST'):
-        super(BinaryNet, self).__init__()
+        super(BinaryNetMNIST, self).__init__()
 
         assert mode in ['Deterministic', 'Stochastic']
         assert estimator in ['ST', 'REINFORCE']
@@ -56,8 +112,8 @@ class BinaryNetMNIST(Net):
         self.first_conv_layer = first_conv_layer
         self.last_conv_layer = last_conv_layer
 
-        self.layer1 = nn.Conv2d(1, 16, kernel_size=5, padding=2)
-        self.batchnorm1 = nn.BatchNorm2d(16)
+        self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1)
+        self.batchnorm1 = nn.BatchNorm2d(10)
         self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         if self.first_conv_layer:
             if self.mode == 'Deterministic':
@@ -66,8 +122,8 @@ class BinaryNetMNIST(Net):
                 self.act_layer1 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer1 = Hardsigmoid()
-        self.layer2 = nn.Conv2d(16, 32, kernel_size=5, padding=2)
-        self.batchnorm2 = nn.BatchNorm2d(32)
+        self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1)
+        self.batchnorm2 = nn.BatchNorm2d(20)
         self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         if self.last_conv_layer:
             if self.mode == 'Deterministic':
@@ -76,10 +132,11 @@ class BinaryNetMNIST(Net):
                 self.act_layer2 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer2 = Hardsigmoid()
-        self.fc = nn.Linear(7 * 7 * 32, 10)
+        self.fc = nn.Linear(7*7*20, 10)
 
     def forward(self, input):
-        x, slope = input
+        x = input
+        slope = 1.0
         if self.first_conv_layer:
             x_layer1 = self.act_layer1(((self.maxpool1(self.batchnorm1(self.layer1(x)))), slope))
         else:
@@ -119,7 +176,11 @@ class NoBinaryNetOmniglotClassification(Net):
         self.fc = nn.Linear(6 * 6 * 64, 1623)
 
     def forward(self, input):
-        x, slope = input
+        if len(input)==2:
+            x, slope = input
+        else:
+            x = input
+            slope = 1.0
         x_layer1 = self.act_layer1(self.maxPool1(self.batchNorm1(self.layer1(x) * slope)))
         x_layer2 = self.act_layer2(self.maxPool2(self.batchNorm2(self.layer2(x_layer1))))
         x_layer3 = self.act_layer3(self.maxPool3(self.batchNorm3(self.layer3(x_layer2))))
@@ -190,7 +251,11 @@ class BinaryNetOmniglotClassification(Net):
         self.fc = nn.Linear(6 * 6 * 64, 1623)
 
     def forward(self, input):
-        x, slope = input
+        if len(input)==2:
+            x, slope = input
+        else:
+            x = input
+            slope = 1.0
         if self.first_conv_layer:
             x_layer1 = self.act_layer1(((self.maxPool1(self.batchNorm1(self.layer1(x)))), slope))
         else:

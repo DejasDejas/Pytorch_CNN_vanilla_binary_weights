@@ -22,7 +22,7 @@ def get_mnist_dataloaders(batch_size_train, batch_size_test):
                                             transform=transforms.Compose([transforms.ToTensor(),
                                                                           transforms.Normalize((0.1307,),
                                                                                                (0.3081,))])),
-                             batch_size=batch_size_test, shuffle=True)
+                             batch_size=batch_size_test, shuffle=False)
 
     # to split valid data
     n_train_examples = int(len(train_data) * 0.9)

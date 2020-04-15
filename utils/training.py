@@ -5,6 +5,7 @@ from torch import save
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch.optim import SGD
 from utils.callback import CallbackList, ProgressBarLogger, DefaultCallback
 from typing import Callable, List, Union
 from torch.optim import optimizer
@@ -12,6 +13,10 @@ from torch.nn import Module
 from torch.utils.data import DataLoader
 from utils.callback import Callback
 from config import PATH
+from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
+from ignite.metrics import Accuracy, Loss, ConfusionMatrix
+from ignite.handlers import ModelCheckpoint
+from tqdm import tqdm
 
 
 def categorical_accuracy(y, y_pred):
@@ -306,3 +311,111 @@ def fit(binary_model, slope_annealing, use_gpu, model: Module, optimiser: optimi
         print('Finished.')
 
     callbacks.on_train_end()
+    
+    
+def run(model, path_model_checkpoint, path_save_plot, name_model, train_loader, val_loader, epochs, lr, momentum, criterion, log_interval, plot_results=True):
+    # train_loader, val_loader = get_data_loaders(train_batch_size, val_batch_size)
+    # model = Net()
+    device = "cpu"
+
+    if torch.cuda.is_available():
+        device = "cuda"
+
+    checkpointer = ModelCheckpoint(path_model_checkpoint, name_model, n_saved=2, create_dir=True, save_as_state_dict=True, require_empty=False)
+
+    model.to(device)  # Move model before creating optimizer
+    optimizer = SGD(model.parameters(), lr=lr, momentum=momentum)
+    trainer = create_supervised_trainer(model, optimizer, criterion, device=device)
+    evaluator = create_supervised_evaluator(
+        model, metrics={"accuracy": Accuracy(), "nll": Loss(F.nll_loss)}, device=device
+    )
+
+    training_history = {'accuracy':[],'loss':[]}
+    validation_history = {'accuracy':[],'loss':[]}
+    last_epoch = []
+
+    desc = "ITERATION - loss: {:.2f}"
+    pbar = tqdm(initial=0, leave=False, total=len(train_loader), desc=desc.format(0))
+
+    @trainer.on(Events.ITERATION_COMPLETED(every=log_interval))
+    def log_training_loss(engine):
+        pbar.desc = desc.format(engine.state.output)
+        pbar.update(log_interval)
+
+
+    @trainer.on(Events.EPOCH_COMPLETED)
+    def log_training_results(engine):
+        pbar.refresh()
+        evaluator.run(train_loader)
+        metrics = evaluator.state.metrics
+        avg_accuracy = metrics["accuracy"]
+        avg_nll = metrics["nll"]
+        accuracy = metrics['accuracy']*100
+        training_history['accuracy'].append(accuracy)
+        training_history['loss'].append(avg_nll)
+        tqdm.write(
+            "Training Results - Epoch: {}  Avg accuracy: {:.2f} Avg loss: {:.2f}".format(
+                engine.state.epoch, accuracy, avg_nll
+            )
+        )
+
+    @trainer.on(Events.EPOCH_COMPLETED)
+    def log_validation_results(engine):
+        evaluator.run(val_loader)
+        metrics = evaluator.state.metrics
+        avg_accuracy = metrics["accuracy"]
+        avg_nll = metrics["nll"]
+        accuracy = metrics['accuracy']*100     
+        validation_history['accuracy'].append(accuracy)
+        validation_history['loss'].append(avg_nll)
+        tqdm.write(
+            "Validation Results - Epoch: {}  Avg accuracy: {:.2f} Avg loss: {:.2f}".format(
+                engine.state.epoch, accuracy, avg_nll
+            )
+        )
+
+        pbar.n = pbar.last_print_n = 0
+
+    trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'MNIST': model})
+    trainer.run(train_loader, max_epochs=epochs)
+
+    if plot_results:
+        plt.plot(training_history['accuracy'],label="Training Accuracy")
+        plt.plot(validation_history['accuracy'],label="Validation Accuracy")
+        plt.xlabel('No. of Epochs')
+        plt.ylabel('Accuracy')
+        plt.legend(frameon=False)
+        plt.savefig(path_save_plot + name_model + '_acc.png')
+        plt.show()
+
+        plt.plot(training_history['loss'],label="Training Loss")
+        plt.plot(validation_history['loss'],label="Validation Loss")
+        plt.xlabel('No. of Epochs')
+        plt.ylabel('Loss')
+        plt.legend(frameon=False)
+        plt.savefig(path_save_plot + name_model + '_loss.png')
+        plt.show()
+
+    pbar.close()
+
+
+def evaluate(model, test_loader):
+    device = "cpu"
+
+    if torch.cuda.is_available():
+        device = "cuda"
+        
+    evaluator_test = create_supervised_evaluator(
+            model, metrics={"accuracy": Accuracy(), "nll": Loss(F.nll_loss)}, device=device
+        )
+
+    evaluator_test.run(test_loader)
+    metrics = evaluator_test.state.metrics
+    avg_nll = metrics["nll"]
+    accuracy = metrics['accuracy']*100     
+    print(
+        "Test Results - Avg accuracy: {:.2f} Avg loss: {:.2f}".format(
+            accuracy, avg_nll
+        )
+    )
+
