@@ -3,94 +3,53 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.realpath('')))
 
-import torch.optim as optim
-from DataLoader.dataLoaders import get_omniglot_dataloaders_v1
-from utils.models import NoBinaryNetOmniglotClassification, BinaryNetOmniglotClassification
-from utils.training import gpu_config
-from utils.callback import *
-from visualize.viz import show_som_examples
-from utils.training import training
-from config import PATH
+import torch
+from torch import nn
+from torch.optim import SGD
+from torch.utils.data import DataLoader
+import torch.nn.functional as F
+from torchvision.transforms import Compose, ToTensor, Normalize
+from torchvision.datasets import MNIST
+import matplotlib.pyplot as plt
+import numpy as np
+from functools import partial
+
+from utils.models import get_my_model_Omniglot, fetch_last_checkpoint_model_filename
+from DataLoader.dataLoaders import get_omniglot_dataloaders_classification
+from utils.training import run, evaluate
+
+
+batch_size_train = 64
+batch_size_test = 64
+# Dataset
+train_loader, valid_loader, test_loader = get_omniglot_dataloaders_classification(batch_size_train, batch_size_test)
+
 
 # parameters default values
-lr = 1e-5
-# momentum = 0.9
-nb_epoch = 30
-batch_size_train = 64
-batch_size_test = 128
+epochs = 40
+lr = 1e-3
+momentum = 0.5
+log_interval = 10  # how many batches to wait before logging training status
+criterion =  F.nll_loss
 
-slope_annealing = True
-reinforce = False
-stochastic = True
+# parameters model to load no Binary model
+binary = False
+model_no_binary, name_model = get_my_model_Omniglot(binary)
+print(name_model)
+
+path_model_checkpoint_no_binary = 'trained_models/Omniglot_classif/No_binary_models/'
+path_save_plot_no_binary = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
+
+run(model_no_binary, path_model_checkpoint_no_binary, path_save_plot_no_binary, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)
+
+
+# parameters model to load no Binary model
 binary = True
-plot_result = True
-first_conv_layer = False
-second_conv_layer = False
-third_conv_layer = False
-fourth_conv_layer = True
-omniglot = True
+model_binary, name_model = get_my_model_Omniglot(binary)
+print(name_model)
 
 
-# Model, activation type, estimator type
-if binary:
-    if stochastic:
-        mode = 'Stochastic'
-        names_model = 'Omniglot_classif_Stochastic'
-    else:
-        mode = 'Deterministic'
-        names_model = 'Omniglot_classif_Deterministic'
-    if reinforce:
-        estimator = 'REINFORCE'
-        names_model += '_REINFORCE'
-    else:
-        estimator = 'ST'
-        names_model += '_ST'
-    if first_conv_layer:
-        names_model += '_first_conv_binary'
-    if second_conv_layer:
-        names_model += '_second_conv_binary'
-    if third_conv_layer:
-        names_model += '_third_conv_binary'
-    if fourth_conv_layer:
-        names_model += '_fourth_conv_binary'
-    model = BinaryNetOmniglotClassification(first_conv_layer=first_conv_layer, second_conv_layer=second_conv_layer,
-                                            third_conv_layer=third_conv_layer, fourth_conv_layer=fourth_conv_layer,
-                                            mode=mode, estimator=estimator)
-else:
-    model = NoBinaryNetOmniglotClassification()
-    names_model = 'Omniglot_classif_NonBinaryNet'
-    mode = None
-    estimator = None
+path_model_checkpoint_binary = 'trained_models/Omniglot_classif/Binary_models/'
+path_save_plot_binary = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
 
-# gpu config:
-model, use_gpu = gpu_config(model)
-
-# Omniglto Dataset
-train_loader, test_loader = get_omniglot_dataloaders_v1(batch_size_train, batch_size_test)
-
-# visualize example
-# show_som_examples(train_loader)
-
-path_save_plot = PATH + '/results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
-path_save_model = PATH + '/trained_models/Omniglot_classif/'
-
-# train
-"""
-callbacks = [
-    ModelCheckpoint(
-        filepath=PATH + path_save_model + names_model + '.pth',
-        monitor=f'val_classif_{names_model}acc',
-    ),
- lassifi_classif_{names_model}_acc'),
-    CSVLogger(PATH + f'/logs/omniglot_classif/{names_model}.csv'),
-]
-"""
-# optimizer
-optimizer = optim.Adam(model.parameters(), lr=lr)
-train_loss, train_acc, val_loss, val_acc = training(path_save_plot, path_save_model, use_gpu, model, names_model,
-                                                    nb_epoch, train_loader, test_loader,
-                                                    optimizer, plot_result, slope_annealing)
-
-# test
-# model.load_state_dict(load('./trained_models/' + names_model + '.pt', map_location=torch.device('cpu')))
-# test_loss, test_acc = test(use_gpu, model, test_loader)
+run(model_binary, path_model_checkpoint_binary, path_save_plot_binary, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)

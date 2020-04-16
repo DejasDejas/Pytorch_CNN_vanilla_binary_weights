@@ -37,7 +37,7 @@ def get_mnist_dataloaders(batch_size_train, batch_size_test):
     return train_loader, valid_loader, test_loader, classes
 
 
-def get_omniglot_dataloaders_v1(batch_size_train, batch_size_test):
+def get_omniglot_dataloaders_classification(batch_size_train, batch_size_test):
     """
     Omniglot data set for one-shot learning. This dataset contains 1623 different handwritten characters
     from 50 different alphabets.
@@ -57,14 +57,15 @@ def get_omniglot_dataloaders_v1(batch_size_train, batch_size_test):
     # test_loader = DataLoader(evaluation_set, shuffle=True)
 
     # to split valid data
-    n_train_examples = int(len(background_set) * 0.9)
-    n_valid_examples = len(background_set) - n_train_examples
-    train_data, valid_data = random_split(background_set, [n_train_examples, n_valid_examples])
-    test_loader = DataLoader(valid_data, batch_size=batch_size_test, shuffle=True)
+    n_train_examples = int(len(background_set) * 0.7)
+    n_valid_examples = int((len(background_set) - n_train_examples) * 0.5)
+    n_test_examples = len(background_set) - n_train_examples - n_valid_examples
+    train_data, valid_data, test_data = random_split(background_set, [n_train_examples, n_valid_examples, n_test_examples])
+    test_loader = DataLoader(test_data, batch_size=batch_size_test, shuffle=False)
+    valid_loader = DataLoader(valid_data, batch_size=batch_size_test, shuffle=True)
     train_loader = DataLoader(train_data, batch_size=batch_size_train, shuffle=True)
-
-    print_data_number(train_loader, test_loader)
-    return train_loader, test_loader
+    print_data_number(train_loader, valid_loader)
+    return train_loader, valid_loader, test_loader
 
 
 def get_omniglot_dataloader_v2(episodes_per_epoch, n_train, k_train, q_train, n_test, k_test, q_test, dataset_class):
