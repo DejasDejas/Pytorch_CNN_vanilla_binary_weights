@@ -1,7 +1,7 @@
 import sys
-# sys.path.append('/data1/data/expes/julien.dejasmin/Thesis/Binary_weights/MNIST_binary_V2')
-import os
-sys.path.append(os.path.dirname(os.path.realpath('')))
+sys.path.append('')
+# import os
+# sys.path.append(os.path.dirname(os.path.realpath('')))
 
 import torch
 from torch import nn
@@ -26,9 +26,9 @@ train_loader, valid_loader, test_loader = get_omniglot_dataloaders_classificatio
 
 
 # parameters default values
-epochs = 40
+epochs = 100
 lr = 1e-3
-momentum = 0.5
+momentum = 0.9
 log_interval = 10  # how many batches to wait before logging training status
 criterion =  F.nll_loss
 

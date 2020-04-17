@@ -210,7 +210,8 @@ class NoBinaryNetOmniglotClassification(Net):
         self.batchNorm4 = nn.BatchNorm2d(64)
         # self.maxPool4 = nn.MaxPool2d(kernel_size=2, stride=2)              
         self.act_layer4 = nn.ReLU()
-        self.fc = nn.Linear(6 * 6 * 64, 1623)
+        self.fc = nn.Linear(7 * 7 * 64, 1623)
+
 
     def forward(self, input):
         x = input
@@ -288,7 +289,7 @@ class BinaryNetOmniglotClassification(Net):
                 self.act_layer4 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer4 = nn.ReLU()
-        self.fc = nn.Linear(6 * 6 * 64, 1623)
+        self.fc = nn.Linear(7 * 7 * 64, 1623)
 
     def forward(self, input):
         x = input

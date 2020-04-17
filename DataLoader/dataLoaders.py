@@ -57,7 +57,7 @@ def get_omniglot_dataloaders_classification(batch_size_train, batch_size_test):
     # test_loader = DataLoader(evaluation_set, shuffle=True)
 
     # to split valid data
-    n_train_examples = int(len(background_set) * 0.7)
+    n_train_examples = int(len(background_set) * 0.8)
     n_valid_examples = int((len(background_set) - n_train_examples) * 0.5)
     n_test_examples = len(background_set) - n_train_examples - n_valid_examples
     train_data, valid_data, test_data = random_split(background_set, [n_train_examples, n_valid_examples, n_test_examples])
