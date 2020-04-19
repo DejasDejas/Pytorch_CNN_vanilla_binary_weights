@@ -10,6 +10,10 @@ import torchvision.transforms.functional as F
 from utils.functions import Hardsigmoid
 import random
 from PIL import Image
+# for regions extraction
+import collections
+from functools import partial
+import cv2
 
 
 class GradientAscent:
@@ -684,3 +688,439 @@ def standardize_and_clip(tensor, min_value=0.0, max_value=1.0,
 
     return clipped
 
+
+#####################################################
+# modules for extract regions that maximizes filters#
+#####################################################
+
+
+def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+  """
+  return region of interest from index (x,y) in image
+  """
+  # determine pixel high left of region of interest:
+  index_col_hl = (ind_x * stride) - padding
+  index_raw_hl = (ind_y * stride) - padding
+
+  if index_col_hl < 0:
+    reduice_region_col_size = index_col_hl
+    index_col_hl = 0
+  else:
+    reduice_region_col_size = 0
+  if index_raw_hl < 0:
+    reduice_region_raw_size = index_raw_hl
+    index_raw_hl = 0
+  else:
+    reduice_region_raw_size = 0
+
+  begin_col = index_col_hl
+  end_col = index_col_hl + filter_size + reduice_region_col_size
+  begin_raw = index_raw_hl
+  end_raw = index_raw_hl + filter_size + reduice_region_raw_size
+
+  if end_col > len_img_w:
+    end_col = len_img_w
+  if end_raw > len_img_h:
+    end_raw = len_img_h
+
+  region = image[begin_raw:end_raw, begin_col:end_col]
+  if region.shape != (filter_size, filter_size):
+    region = cv2.resize(region, (filter_size, filter_size), interpolation = cv2.INTER_AREA)
+    
+  return region
+  
+ 
+def get_region_layer2(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+  """
+  return region of interest from index (x,y)
+  """
+  region_shape = 7
+  # determine pixel high left of region of interest:
+  index_col_hl = (ind_x * stride) - padding
+  index_raw_hl = (ind_y * stride) - padding
+
+  if index_col_hl < 0:
+    index_col_hl = 0
+  if index_raw_hl < 0:
+    index_raw_hl = 0
+
+  index_col_hl_2 = (index_col_hl * stride) - padding
+  index_raw_hl_2 = (index_raw_hl * stride) - padding
+
+  if index_col_hl_2 < 0:
+    reduice_region_col_size = index_col_hl_2
+    index_col_hl_2 = 0
+  else:
+    reduice_region_col_size = 0
+  if index_raw_hl_2 < 0:
+    reduice_region_raw_size = index_raw_hl_2
+    index_raw_hl_2 = 0
+  else:
+    reduice_region_raw_size = 0
+
+  begin_col = index_col_hl_2
+  end_col = index_col_hl_2 + ((filter_size*stride)+1) + reduice_region_col_size
+  begin_raw = index_raw_hl_2
+  end_raw = index_raw_hl_2 + ((filter_size*stride)+1) + reduice_region_raw_size
+
+  if end_col > len_img_w:
+    end_col = len_img_w
+  if end_raw > len_img_h:
+    end_raw = len_img_h
+
+  region = image[begin_raw:end_raw, begin_col:end_col]
+  if region.shape != (region_shape, region_shape):
+    region = cv2.resize(region, (region_shape, region_shape), interpolation = cv2.INTER_AREA)
+
+  return region
+  
+
+def get_filter_layer2():
+    return np.array(([[1,1,2,1,2,1,1],
+                        [1,1,2,1,2,1,1],
+                        [2,2,4,2,4,2,2],
+                        [1,1,2,1,2,1,1],
+                        [2,2,4,2,4,2,2],
+                        [1,1,2,1,2,1,1],
+                        [1,1,2,1,2,1,1]]))
+
+
+def get_region_layer3(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+  """
+  return region of interest from index (x,y)
+  """
+  region_shape = 15
+  # determine pixel high left of region of interest:
+  index_col_hl = (ind_x * stride) - padding
+  index_raw_hl = (ind_y * stride) - padding
+
+  if index_col_hl < 0:
+    index_col_hl = 0
+  if index_raw_hl < 0:
+    index_raw_hl = 0
+
+  index_col_hl_2 = (index_col_hl * stride) - padding
+  index_raw_hl_2 = (index_raw_hl * stride) - padding
+
+  if index_col_hl_2 < 0:
+    index_col_hl_2 = 0
+  if index_raw_hl_2 < 0:
+    index_raw_hl_2 = 0
+
+  index_col_hl_3 = (index_col_hl_2 * stride) - padding
+  index_raw_hl_3 = (index_raw_hl_2 * stride) - padding
+
+  if index_col_hl_3 < 0:
+    reduice_region_col_size = index_col_hl_3
+    index_col_hl_3 = 0
+  else:
+    reduice_region_col_size = 0
+  if index_raw_hl_3 < 0:
+    reduice_region_raw_size = index_raw_hl_3
+    index_raw_hl_3 = 0
+  else:
+    reduice_region_raw_size = 0
+
+  begin_col = index_col_hl_3
+  end_col = index_col_hl_3 + ((((filter_size*stride)+1)*stride)+1) + reduice_region_col_size
+  begin_raw = index_raw_hl_3
+  end_raw = index_raw_hl_3 + ((((filter_size*stride)+1)*stride)+1) + reduice_region_raw_size
+
+  if end_col > len_img_w:
+    end_col = len_img_w
+  if end_raw > len_img_h:
+    end_raw = len_img_h
+
+  region = image[begin_raw:end_raw, begin_col:end_col]
+  if region.shape != (region_shape, region_shape):
+    region = cv2.resize(region, (region_shape, region_shape), interpolation = cv2.INTER_AREA)
+
+  return region
+
+
+def get_filter_layer3():
+  return np.array(([[1,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,1]]))
+
+
+
+def get_region_layer4(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+  """
+  return region of interest from index (x,y)
+  """
+  region_shape = 31
+  # determine pixel high left of region of interest:
+  index_col_hl = (ind_x * stride) - padding
+  index_raw_hl = (ind_y * stride) - padding
+
+  if index_col_hl < 0:
+    index_col_hl = 0
+  if index_raw_hl < 0:
+    index_raw_hl = 0
+
+  index_col_hl_2 = (index_col_hl * stride) - padding
+  index_raw_hl_2 = (index_raw_hl * stride) - padding
+
+  if index_col_hl_2 < 0:
+    index_col_hl_2 = 0
+  if index_raw_hl_2 < 0:
+    index_raw_hl_2 = 0
+
+  index_col_hl_3 = (index_col_hl_2 * stride) - padding
+  index_raw_hl_3 = (index_raw_hl_2 * stride) - padding
+
+  if index_col_hl_3 < 0:
+    index_col_hl_3 = 0
+  if index_raw_hl_3 < 0:
+    index_raw_hl_3 = 0
+
+  index_col_hl_4 = (index_col_hl_3 * stride) - padding
+  index_raw_hl_4 = (index_raw_hl_3 * stride) - padding
+
+  if index_col_hl_4 < 0:
+    reduice_region_col_size = index_col_hl_4
+    index_col_hl_4 = 0
+  else:
+    reduice_region_col_size = 0
+  if index_raw_hl_4 < 0:
+    reduice_region_raw_size = index_raw_hl_4
+    index_raw_hl_4 = 0
+  else:
+    reduice_region_raw_size = 0
+
+  begin_col = index_col_hl_4
+  end_col = index_col_hl_4 + ((((((filter_size*stride)+1)*stride)+1))*stride)+1 + reduice_region_col_size
+  begin_raw = index_raw_hl_4
+  end_raw = index_raw_hl_4 + ((((((filter_size*stride)+1)*stride)+1))*stride)+1 + reduice_region_raw_size
+
+  if end_col > len_img_w:
+    end_col = len_img_w
+  if end_raw > len_img_h:
+    end_raw = len_img_h
+
+  region = image[begin_raw:end_raw, begin_col:end_col]
+  if region.shape != (region_shape, region_shape):
+    region = cv2.resize(region, (region_shape, region_shape), interpolation = cv2.INTER_AREA)
+
+  return region
+
+
+def get_filter_layer4():
+  return np.array(([[1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,2],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1],
+                     [1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,1]]))
+
+
+
+def get_all_regions_max(loader, activations):
+
+    dataiter = iter(loader)
+    images, _ = dataiter.next()
+    print('nb images: {}'.format(len(images)))
+
+    print('begin extraction regions')
+    region_final = {}
+    activation_final = {}
+    
+    filter_layer2 = get_filter_layer2()
+    filter_layer3 = get_filter_layer3()
+    filter_layer4 = get_filter_layer4()
+
+    for name, fm in activations.items():
+      # for each image of fm 
+      if name=='layer1':
+        regions_layer = np.zeros((fm.shape[0], fm.shape[1], 3, 3))
+        activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
+      if name=='layer2':
+        regions_layer = np.zeros((fm.shape[0], fm.shape[1], 7, 7))
+        activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
+      if name=='layer3':
+        regions_layer = np.zeros((fm.shape[0], fm.shape[1], 15, 15))
+        activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
+      if name=='layer4':
+        regions_layer = np.zeros((fm.shape[0], fm.shape[1], 31, 31))
+        activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
+      for j in range(fm.shape[0]):
+          print('treating image n {}/{}, for layer: {}'.format(j, fm.shape[0], name))
+          
+          im = images[j].unsqueeze(0).numpy().squeeze()  # image i of batch batch: numpy array: (28,28)
+          if name=='layer1':
+            regions_im_j = np.zeros((fm.shape[1], 3, 3))  # initialise empty list of regions for batch batch
+            activation_im_j = np.zeros((fm.shape[1]))
+          if name=='layer2':
+            regions_im_j = np.zeros((fm.shape[1], 7, 7))
+            regions_im_j = (regions_im_j*filter_layer2)/4
+            activation_im_j = np.zeros((fm.shape[1]))
+          if name=='layer3':
+            regions_im_j = np.zeros((fm.shape[1], 15, 15))
+            regions_im_j = (regions_im_j*filter_layer3)/4
+            activation_im_j = np.zeros((fm.shape[1]))
+          if name=='layer4':
+            regions_im_j = np.zeros((fm.shape[1], 31, 31))
+            regions_im_j = (regions_im_j*filter_layer4)/4
+            activation_im_j = np.zeros((fm.shape[1]))
+          for i in range(fm.shape[1]):  # for all fm in image j
+            act_max = max(fm[j][i].min(), fm[j][i].max(), key=abs)  # get max activation value in fm j
+            ind_x = int((np.where(fm[j][i]==act_max)[0])[0])  # get index (x,y) of act_max
+            ind_y = int((np.where(fm[j][i]==act_max)[1])[0])
+
+            if name=='layer1':
+              region = get_region_layer1(im, ind_x, ind_y, name, stride, padding, filter_size)
+            if name=='layer2':
+              region = get_region_layer2(im, ind_x, ind_y, name, stride, padding, filter_size)
+            if name=='layer3':
+              region = get_region_layer3(im, ind_x, ind_y, name, stride, padding, filter_size)
+            if name=='layer4':
+              region = get_region_layer4(im, ind_x, ind_y, name, stride, padding, filter_size)
+            
+            regions_im_j[i] = region
+            activation_im_j[i] = act_max.detach().numpy()
+          regions_layer[j] = regions_im_j
+          activation_layer[j] = activation_im_j
+      region_final[name] = regions_layer
+      activation_final[name] = activation_layer
+
+    return region_final, activation_final
+    
+    
+#####################################
+#Modules for viz regions of interest#
+#####################################
+
+
+def get_regions_interest(regions, activation, best, worst, viz_mean_img, viz_grid, percentage=None, list_filter=None):
+  """
+  get regions of interest
+  """
+  nb_filter = activation.shape[1]
+
+  if best==False and worst==False:
+    assert percentage!=None, "if don't choice best or worst value, you didn't choice a percentage value"
+  if best==True and worst==True:
+    raise TypeError('choice only one value at True between best an worst')
+
+  # consider only regions of all image of list_filter or all filter
+  if list_filter == None:
+    print('Interest of all filters')
+    regions_interest_filter = regions
+    activations_values_interest = activation
+    nb_filter = nb_filter
+  else:
+    # assert max(list_filter) < nb_filter and min(list_filter) >= 0, 'filter choisen out of range'
+    print('Interest of filters:', list_filter)
+    regions_interest_filter = get_index_filter_interest(regions, list_filter)
+    activations_values_interest = activation[:, list_filter]
+    nb_filter = len(list_filter)
+
+  # consider a percent of best or worst activations:
+  if percentage == None:
+    print('Consider all image regions')
+    selected_regions = regions_interest_filter
+  else:
+    assert percentage <= 100 and percentage >= 0, 'percentage value must be in 0 and 100'
+    n = int((len(activation)*percentage)/100)
+    print('Consider {}% image regions = {} images'.format(percentage, n))
+    selected_regions = get_n_first_regions_index(best, worst, n, activations_values_interest, nb_filter, regions_interest_filter)
+
+  nb_regions = selected_regions[0].shape[0]
+
+  # visualization: one mean image or grid image:
+  if viz_mean_img:
+      nb_image = 1
+      print('mean image:')
+      for i, ind_filter in enumerate(list_filter):
+        print('mean regions of {} regions more={} or worst={} active for filter number: {} :'.format(n, best, worst, ind_filter))
+        mean_img = np.mean(selected_regions[i], 0)
+        viz_regions(nb_image, mean_img)
+
+  if viz_grid:
+      nb_image = nb_regions
+      print('grid image')
+      for i, ind_filter in enumerate(list_filter):
+        region_to_print = []
+        print('grid regions of {} regions more={} or worst={} active for filter number: {} :'.format(n, best, worst, ind_filter))
+        for j in range(nb_regions):
+          region_to_print.append(selected_regions[i][j])
+        viz_regions(nb_image, region_to_print)
+        
+  return selected_regions
+
+
+def viz_regions(nb_image, regions):
+  """
+  visualize region of interest
+  """
+  regions = torch.tensor(regions) 
+  regions = regions.reshape((nb_image,1,regions.shape[-2],regions.shape[-1]))
+  visTensor(regions, ch=0, allkernels=False)
+  plt.ioff()
+  plt.show()
+
+
+def get_n_first_regions_index(best, worst, n, activation, nb_filter, regions):
+  """
+  select only regions that we want 
+  """
+  regions_selected = []
+  if best:
+    for i in range(nb_filter):
+      ind_filter = (-activation[:, i]).argsort()[:n]
+      regions_selected.append(regions[ind_filter, i])
+    return regions_selected
+
+  elif worst:
+    for i in range(nb_filter):
+      ind_filter = activation[:, i].argsort()[:n]
+      regions_selected.append(regions[ind_filter, i])
+    return regions_selected
+
+  else:
+    print('choice worst or best with bool True or False')
+
+
+def get_index_filter_interest(regions, list_filter):
+  """
+  extract only regions of the filter interest
+  """
+  return regions[:, list_filter]
