@@ -9,7 +9,7 @@ def get_mnist_dataloaders(batch_size_train, batch_size_test):
     create dataloader for MNIST dataset
     :param batch_size_train: int
     :param batch_size_test: int
-    :return:
+    :return: DataLoader for train, valid and test data
     """
     # train loader
     train_data = datasets.MNIST('./data', train=True, download=True,
@@ -39,8 +39,8 @@ def get_mnist_dataloaders(batch_size_train, batch_size_test):
 
 def get_omniglot_dataloaders_classification(batch_size_train, batch_size_test):
     """
-    Omniglot data set for one-shot learning. This dataset contains 1623 different handwritten characters
-    from 50 different alphabets.
+    Omniglot data set for one-shot learning but used like classification dataset.
+    This dataset contains 1623 different handwritten characters from 50 different alphabets.
     test: 13.180 images
     train: 19.280 images
     image_size = (105, 105)
@@ -69,6 +69,19 @@ def get_omniglot_dataloaders_classification(batch_size_train, batch_size_test):
 
 
 def get_omniglot_dataloader_v2(episodes_per_epoch, n_train, k_train, q_train, n_test, k_test, q_test, dataset_class):
+    """
+    Omniglot data set for one-shot learning.
+    This function, build dataset for few shot learning task.
+    :param episodes_per_epoch:
+    :param n_train:
+    :param k_train:
+    :param q_train:
+    :param n_test:
+    :param k_test:
+    :param q_test:
+    :param dataset_class:
+    :return:
+    """
     background = dataset_class('background')
     background_taskloader = DataLoader(
         background,

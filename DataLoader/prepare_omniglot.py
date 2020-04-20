@@ -12,7 +12,6 @@ from skimage import transform
 import zipfile
 import shutil
 import os
-
 from config import DATA_PATH
 
 # Parameters
