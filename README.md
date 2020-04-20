@@ -27,7 +27,7 @@ The MNIST database of handwritten digits, available from this [link](http://yann
 
 ## Open Binary MNIST notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rStRyIPL38GjhJYJEXs9tRLa_EtzZCWF)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1zW0K7yNF0JIMRs7DUIGazZqNU5IkSppw)
 
 
 ## Results on MNIST:
@@ -50,25 +50,6 @@ The MNIST database of handwritten digits, available from this [link](http://yann
 | Deterministic binary model in the last conv layer with REINFORCE  	|     0.5569     	|      95.42     	|
 | Deterministic binary model in the both conv layer with REINFORCE  	|     0.8538     	|      93.40     	|
 
-### Heatmap:
-Visuallize regions of a specific image that are more significant for prediction:
-
-Heatmap No binary network, conv layer1:
-![heatmap no binary network conv1|150x150](results/MNIST_results/heatmap_png/heatmapNonBinaryNet_conv1.png)
-
-heatmap Stochastic binary network with ST, conv layer1:
-![heatmap binary network Stochastic ST conv1|150x150](results/MNIST_results/heatmap_png/heatmapStochastic_ST_first_conv_binary_conv1.png)
-
-### Images that maximizes activations for a specific filter in a layer of MNIST model:
-
-This visualizations made with help of Flashtorch code [7].
-
-Grid of some iamges that maximizes some filter in second layer of no binary MNIST model:
-![grid images max filter no binary model MNIST](results/MNIST_results/Image_max_filter/no_binary_image_maximize_filter_layer2_MNIST.png)
-
-Grid of some iamges that maximizes some filter in second layer of binary MNIST model:
-![grid images max filter binary model MNIST](results/MNIST_results/Image_max_filter/binary_image_maximize_filter_layer2_MNIST)
-
 
 # PART2: Omniglot Classification with binary activations:
 
@@ -77,9 +58,9 @@ Downlad from [Omniglot data set for one-shot learning](https://github.com/brende
 
 The Omniglot data set is designed for developing more human-like learning algorithms. It contains 1623 different handwritten characters from 50 different alphabets. Each of the 1623 characters was drawn online via Amazon's Mechanical Turk by 20 different people. Each image is paired with stroke data, a sequences of [x,y,t] coordinates with time (t) in milliseconds. [6]
 
-## Open Binary MNIST notebook:
+## Open Binary Omniglot notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1QptmwiKNH_5oigEf5Y3qV2DErdHvDcsK)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1CF5S1hTIczb4k2hzOyZr5x6ItUeTYrj3)
 
 ## Results on MNIST:
 ### Loss/ACC: with 10 epochs.
@@ -91,20 +72,6 @@ The Omniglot data set is designed for developing more human-like learning algori
 | Stochastic binary model in the second conv layer with ST            	|      19.50    	|
 | Stochastic binary model in the third conv layer with ST                	|    15.66    	|
 | Stochastic binary model in the fourth conv layer with ST        	|    16.03  	|
-
-### Images that maximizes activations for a specific filter in a layer of Omniglot model: [7]
-
-Grid of some iamges that maximizes some filter in second layer of no binary Omniglot model:
-![grid images max filter no binary model Omniglot layer2](results/Omniglot_results/regions/image_max_activation/no_binary_image_maximize_filter_layer2_Omniglot.png)
-
-Grid of some iamges that maximizes some filter in second layer of binary Omniglot model:
-![grid images max filter binary model Omniglot layer2](results/Omniglot_results/regions/image_max_activation/binary_image_maximize_filter_layer2_Omniglot.png)
-
-Grid of some iamges that maximizes some filter in third layer of no binary Omniglot model:
-![grid images max filter no binary model Omniglot layer3](results/Omniglot_results/regions/image_max_activation/no_binary_image_maximize_filter_layer3_Omniglot.png)
-
-Grid of some iamges that maximizes some filter in third layer of binary Omniglot model:
-![grid images max filter binary model Omniglot layer3](results/Omniglot_results/regions/image_max_activation/binary_image_maximize_filter_layer3_Omniglot.png)
 
 
 # PART3: Omniglot Few Shot with binary activations:
@@ -132,15 +99,6 @@ In this part, we present results obtained with [Matching Networks for One Shot L
 | binary MN: second conv           	|     **79.6**     	|
 | binary MN: third conv           	|     64.8     	|
 | binary MN: fourth conv           	|     53.6     	|
-
-
-### Heatmap:
-
-heatmap No binary network, conv layer1, image superpose:
-![heatmap no binary network conv1 superpose|150x150](results/Omniglot_results/heatmap/binary_MN_first_conv_conv1_superpose.png)
-
-heatmap binary network, conv layer1:
-![heatmap binary network conv1|150x150](results/Omniglot_results/heatmap/binary_MN_first_conv_conv1.png)
 
 
 # References: 
