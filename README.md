@@ -58,9 +58,13 @@ Downlad from [Omniglot data set for one-shot learning](https://github.com/brende
 
 The Omniglot data set is designed for developing more human-like learning algorithms. It contains 1623 different handwritten characters from 50 different alphabets. Each of the 1623 characters was drawn online via Amazon's Mechanical Turk by 20 different people. Each image is paired with stroke data, a sequences of [x,y,t] coordinates with time (t) in milliseconds. [6]
 
-## Open Binary MNIST notebook:
+## Open Binary Omniglot notebook:
 
+<<<<<<< HEAD
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1CF5S1hTIczb4k2hzOyZr5x6ItUeTYrj3#scrollTo=VY8t9rlv-P7q&uniqifier=1)
+=======
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1CF5S1hTIczb4k2hzOyZr5x6ItUeTYrj3)
+>>>>>>> a9f26e83c3213b3749c07a7d7bbe0c9d84d86ca3
 
 ## Results on MNIST:
 ### Loss/ACC: with 10 epochs.
@@ -101,7 +105,10 @@ In this part, we present results obtained with [Matching Networks for One Shot L
 | binary MN: fourth conv           	|     53.6     	|
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a9f26e83c3213b3749c07a7d7bbe0c9d84d86ca3
 # References: 
 * [1]: [Github: Wizaron/binary-stochastic-neurons](https://github.com/Wizaron/binary-stochastic-neurons).
 * [2]: ['HIERARCHICAL MULTISCALE RECURRENT NEURAL NETWORKS', Junyoung Chung, Sungjin Ahn & Yoshua Bengio (Mar 2017)](https://arxiv.org/pdf/1609.01704.pdf).
