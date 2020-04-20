@@ -11,7 +11,8 @@ from config import DATA_PATH
 
 class OmniglotDataset(Dataset):
     def __init__(self, subset):
-        """Dataset class representing Omniglot dataset
+        """
+        Dataset class representing Omniglot dataset
         # Arguments:
             subset: Whether the dataset represents the background or evaluation set
         """
@@ -29,8 +30,8 @@ class OmniglotDataset(Dataset):
         self.class_name_to_id = {self.unique_characters[i]: i for i in range(self.num_classes())}
         self.df = self.df.assign(class_id=self.df['class_name'].apply(lambda c: self.class_name_to_id[c]))
         # print(type(self.df.index))
-        # self.df = self.df.assign(class_id=pd.DataFrame(data=self.df.index.values).apply(lambda c: self.class_name_to_id[c]))
-        # print(self.df)
+        # self.df = self.df.assign(class_id=pd.DataFrame(data=self.df.index.values).apply(
+        # lambda c: self.class_name_to_id[c])) print(self.df)
 
         # Create dicts
         # self.datasetid_to_filepath = self.df.to_dict()['id']
