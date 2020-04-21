@@ -140,7 +140,7 @@ class GradientAscent:
 
         return self._ascent(input_, num_iter)
 
-    def visualize(self, layer, filter_idxs=None, mean_gradient=True, ind_x=None, ind_y=None,
+    def visualize(self, layer, MNIST, filter_idxs=None, mean_gradient=True, ind_x=None, ind_y=None,
                   first_conv_layer=False, lr=1., num_iter=30,
                   num_subplots=4, figsize=(4, 4), title='Conv2d',
                   return_output=False):
@@ -182,19 +182,20 @@ class GradientAscent:
                     image is determined by `img_size` attribute which defaults
                     to 224.
         """
-
+        
         self._lr = lr
         self.mean_gradient = mean_gradient
         self.ind_x = ind_x
         self.ind_y = ind_y
         self.first_conv_layer = first_conv_layer
+        
 
         if not self.mean_gradient:
             assert self.ind_x is not None and self.ind_y is not None, 'if mean_gradient is false, you must choice x ' \
                                                                       'and y index '
 
         if type(filter_idxs) == int:
-            self._visualize_filter(layer,
+            self._visualize_filter(layer, MNIST,
                                    filter_idxs,
                                    self.mean_gradient,
                                    self.ind_x,
@@ -211,7 +212,7 @@ class GradientAscent:
                 filter_idxs = np.random.choice(range(num_total_filters),
                                                size=num_subplots)
 
-            self._visualize_filters(layer,
+            self._visualize_filters(layer, MNIST,
                                     filter_idxs,
                                     self.mean_gradient,
                                     self.ind_x,
@@ -220,7 +221,6 @@ class GradientAscent:
                                     num_iter,
                                     len(filter_idxs),
                                     title=title)
-
         if return_output:
             return self.output
 
@@ -251,7 +251,6 @@ class GradientAscent:
 
     def _ascent(self, x, num_iter):
         output = []
-
         for i in range(num_iter):
             self.model(x)
             self.activation.backward()
@@ -267,8 +266,7 @@ class GradientAscent:
         elif (filter_idx < 0) or (filter_idx > num_filters):
             raise ValueError(f'Filter index must be between 0 and {num_filters - 1}.')
 
-    def _visualize_filter(self, layer, filter_idx, mean_gradient, ind_x, ind_y, first_conv_layer, num_iter, figsize,
-                          title):
+    def _visualize_filter(self, layer, MNIST, filter_idx, mean_gradient, ind_x, ind_y, first_conv_layer, num_iter, figsize, title):
         self.output = self.optimize(layer, filter_idx, mean_gradient, ind_x, ind_y, num_iter=num_iter)
 
         plt.figure(figsize=figsize)
@@ -277,6 +275,7 @@ class GradientAscent:
 
         plt.imshow(format_for_plotting(
             standardize_and_clip(self.output[-1],
+                                 MNIST,
                                  saturation=0.15,
                                  brightness=0.7)), cmap='gray');
 
@@ -290,9 +289,7 @@ class GradientAscent:
         plt.show()
         # plt.imsave('plot_image_maximize_filter_layer2_model_MNIST.png')
 
-    def _visualize_filters(self, layer, filter_idxs, mean_gradient, ind_x, ind_y, first_conv_layer, num_iter,
-                           num_subplots,
-                           title):
+    def _visualize_filters(self, layer, MNIST, filter_idxs, mean_gradient, ind_x, ind_y, first_conv_layer, num_iter, num_subplots, title):
         # Prepare the main plot
 
         num_cols = 4
@@ -317,6 +314,7 @@ class GradientAscent:
 
             ax.imshow(format_for_plotting(
                 standardize_and_clip(output[-1],
+                                     MNIST,
                                      saturation=0.15,
                                      brightness=0.7)), cmap='gray')
             if self.zoom and first_conv_layer:
@@ -560,14 +558,14 @@ def apply_transforms(image, size=224):
     # means = [0.485, 0.456, 0.406]
     # stds = [0.229, 0.224, 0.225]
     # to only one channel
-    means = [0.406]
-    stds = [0.225]
+    means = [0.1307]
+    stds = [0.3081]
 
     transform = transforms.Compose([
         transforms.Resize(size),
         transforms.CenterCrop(size),
         transforms.ToTensor(),
-        transforms.Normalize(means, stds)
+        # transforms.Normalize(means, stds)
     ])
 
     tensor = transform(image).unsqueeze(0)
@@ -609,7 +607,7 @@ def format_for_plotting(tensor):
         return formatted.permute(1, 2, 0).detach()
 
 
-def standardize_and_clip(tensor, min_value=0.0, max_value=1.0,
+def standardize_and_clip(tensor, MNIST, min_value=0.0, max_value=1.0,
                          saturation=0.1, brightness=0.5):
     """Standardizes and clips input tensor.
     Standardizes the input tensor (mean = 0.0, std = 1.0). The color saturation
@@ -631,14 +629,21 @@ def standardize_and_clip(tensor, min_value=0.0, max_value=1.0,
 
     tensor = tensor.detach().cpu()
 
-    mean = tensor.mean()
-    std = tensor.std()
-
+    # mean = tensor.mean()
+    # std = tensor.std()
+    mean = 0.1307
+    std = 0.3081
+    
     if std == 0:
         std += 1e-7
 
-    standardized = tensor.sub(mean).div(std).mul(saturation)
-    clipped = standardized.add(brightness).clamp(min_value, max_value)
+    # standardized = tensor.sub(mean).div(std).mul(saturation)
+    if MNIST:
+        unstandardized = tensor.mul(std).add(mean).mul(saturation)
+    else:
+        unstandardized = tensor.mul(saturation)
+    # standardized = tensor.mul(saturation)
+    clipped = unstandardized.add(brightness).clamp(min_value, max_value)
 
     return clipped
 
@@ -952,7 +957,8 @@ def get_all_regions_max(loader, activations):
                 regions_im_j = (regions_im_j * filter_layer4) / 4
                 activation_im_j = np.zeros((fm.shape[1]))
             for i in range(fm.shape[1]):  # for all fm in image j
-                act_max = max(fm[j][i].min(), fm[j][i].max(), key=abs)  # get max activation value in fm j
+                # act_max = max(fm[j][i].min(), fm[j][i].max(), key=abs)  # get max activation value in fm j
+                act_max = fm[j][i].max()
                 ind_x = int((np.where(fm[j][i] == act_max)[0])[0])  # get index (x,y) of act_max
                 ind_y = int((np.where(fm[j][i] == act_max)[1])[0])
 
@@ -1025,7 +1031,13 @@ def get_regions_interest(regions, activation, best, worst, viz_mean_img, viz_gri
             print('mean regions of {} regions more={} or worst={} active for filter number: {} :'.format(n, best, worst,
                                                                                                          ind_filter))
             mean_img = np.mean(selected_regions[i], 0)
-            viz_regions(nb_image, mean_img)
+            mean_img_1 = (mean_img - np.min(mean_img))/(np.max(mean_img)-np.min(mean_img))
+            mean_img_2 = (mean_img*0.3081)+0.1307
+            
+            # viz_regions(nb_image, np.flip(mean_img_1,0))
+            print(mean_img_2.shape)
+            viz_regions(nb_image, mean_img_2[range(mean_img_2.shape[0]-1,-1,-1),:])
+            viz_regions(nb_image, mean_img_2)
 
     if viz_grid:
         nb_image = nb_regions
