@@ -369,6 +369,13 @@ def viz_filters(model):
             plt.show()
 
 
+def get_activation(name, activation):
+    def hook(model, input, output):
+        activation[name] = output.detach()
+
+    return hook
+    
+    
 def viz_heatmap(model, name_model, loader, index_data=None, save=True):
     activation = {}
     for name, m in model.named_modules():
@@ -425,13 +432,6 @@ def test_predict_few_examples(model, loader):
         ax.imshow(images_arr[i].resize_(1, images[0].shape[-1], images[0].shape[-2]).numpy().squeeze(), cmap='gray')
         ax.set_title("{} ({})".format(pred_arr[i], labels_arr[i]),
                      color=("green" if pred_arr[i] == labels_arr[i] else "red"))
-
-
-def get_activation(name, activation):
-    def hook(model, input, output):
-        activation[name] = output.detach()
-
-    return hook
 
 
 def get_train_data():
@@ -654,9 +654,6 @@ def standardize_and_clip(tensor, MNIST, min_value=0.0, max_value=1.0,
 
 
 def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
-    """
-  return region of interest from index (x,y) in image
-  """
     # determine pixel high left of region of interest:
     index_col_hl = (ind_x * stride) - padding
     index_raw_hl = (ind_y * stride) - padding
@@ -686,13 +683,10 @@ def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, l
     if region.shape != (filter_size, filter_size):
         region = cv2.resize(region, (filter_size, filter_size), interpolation=cv2.INTER_AREA)
 
-    return region
+    return region, begin_col, end_col, begin_raw, end_raw
 
 
 def get_region_layer2(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
-    """
-  return region of interest from index (x,y)
-  """
     region_shape = 7
     # determine pixel high left of region of interest:
     index_col_hl = (ind_x * stride) - padding
@@ -745,9 +739,6 @@ def get_filter_layer2():
 
 
 def get_region_layer3(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
-    """
-  return region of interest from index (x,y)
-  """
     region_shape = 15
     # determine pixel high left of region of interest:
     index_col_hl = (ind_x * stride) - padding
@@ -816,9 +807,6 @@ def get_filter_layer3():
 
 
 def get_region_layer4(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
-    """
-  return region of interest from index (x,y)
-  """
     region_shape = 31
     # determine pixel high left of region of interest:
     index_col_hl = (ind_x * stride) - padding
