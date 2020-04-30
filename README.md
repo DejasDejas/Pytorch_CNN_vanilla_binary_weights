@@ -62,19 +62,19 @@ The Omniglot data set is designed for developing more human-like learning algori
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1CF5S1hTIczb4k2hzOyZr5x6ItUeTYrj3)
 
-## Results on MNIST:
+## Results on Omniglot classification with data train (80% train, 10% validation and 10% test):
 ### Loss/ACC: with 10 epochs.
 |               Models: 4 conv layers          	     	|  Accuracy (%)  	|
 |:-----------------------------------------------------------------:	|:--------------:	|
-| No binary models                                                  	|      **91.96**   	|
+| No binary models                                                  	|      **94.97**   	|
 |:-----------------------------------------------------------------:	|:--------------:	|
-| Stochastic binary model in the first conv layer with ST           	|    **91.55**     	|
+| Stochastic binary model in the first conv layer with ST           	|    **93.05**     	|
 | Stochastic binary model in the second conv layer with ST            	|      19.50    	|
 | Stochastic binary model in the third conv layer with ST                	|    15.66    	|
 | Stochastic binary model in the fourth conv layer with ST        	|    16.03  	|
 
 
-# PART3: Omniglot Few Shot with binary activations:
+# PART3: Omniglot Few Shot Learning with binary activations:
 
 Most of the code in this section comes from this repository: [Github: oscarknagg/few-shot](https://github.com/oscarknagg/few-shot). [3]
 
@@ -85,7 +85,7 @@ In this part, we present results obtained with [Matching Networks for One Shot L
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1GW_yLVN62nRDgQrPAUkeM1b7yGSGSWg5)
 
-## Results on Omniglot:
+## Results on Omniglot few shot learning:
 ### ACC: with this repository with 10 epochs.
 
 |               Models: matching Network (MN) [4]              	|     Accuracy (%)   	|

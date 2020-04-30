@@ -12,9 +12,8 @@ from torch.optim import optimizer
 from torch.nn import Module
 from torch.utils.data import DataLoader
 from utils.callback import Callback
-from config import PATH
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
-from ignite.metrics import Accuracy, Loss, ConfusionMatrix
+from ignite.metrics import Accuracy, Loss
 from ignite.handlers import ModelCheckpoint
 from tqdm import tqdm
 
