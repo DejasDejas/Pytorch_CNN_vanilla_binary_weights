@@ -211,7 +211,7 @@ class NoBinaryNetOmniglotClassification(Net):
     def __init__(self):
         super(NoBinaryNetOmniglotClassification, self).__init__()
 
-        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, stride=2)
+        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, stride=1)
         self.batchNorm1 = nn.BatchNorm2d(64)
         # self.dropout1 = nn.Dropout(0.5) #50 % probability 
         # self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -304,7 +304,7 @@ class BinaryNetOmniglotClassification(Net):
         self.layer3 = nn.Conv2d(128, 256, kernel_size=3, padding=1, stride=2)
         self.batchNorm3 = nn.BatchNorm2d(256)
         # self.dropout3 = nn.Dropout(0.5)
-        #self.maxPool3 = nn.MaxPool2d(kernel_size=2, stride=2) 
+        #self.maxPool3 = nn.MaxPool2d(kernel_size=2, stride=2)
         if self.third_conv_layer:
             if self.mode == 'Deterministic':
                 self.act_layer3 = DeterministicBinaryActivation(estimator=estimator)
