@@ -369,6 +369,7 @@ def viz_filters(model):
             plt.show()
 
 
+<<<<<<< HEAD
 def get_activation(name, activation):
     def hook(model, input, output):
         activation[name] = output.detach()
@@ -376,6 +377,8 @@ def get_activation(name, activation):
     return hook
     
     
+=======
+>>>>>>> 5afd9c16b15a644c659fc0bb1142ff4983a49ae9
 def viz_heatmap(model, name_model, loader, index_data=None, save=True):
     activation = {}
     for name, m in model.named_modules():
@@ -432,6 +435,13 @@ def test_predict_few_examples(model, loader):
         ax.imshow(images_arr[i].resize_(1, images[0].shape[-1], images[0].shape[-2]).numpy().squeeze(), cmap='gray')
         ax.set_title("{} ({})".format(pred_arr[i], labels_arr[i]),
                      color=("green" if pred_arr[i] == labels_arr[i] else "red"))
+
+
+def get_activation(name, activation):
+    def hook(model, input, output):
+        activation[name] = output.detach()
+
+    return hook
 
 
 def get_train_data():
@@ -654,6 +664,12 @@ def standardize_and_clip(tensor, MNIST, min_value=0.0, max_value=1.0,
 
 
 def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+<<<<<<< HEAD
+=======
+    """
+  return region of interest from index (x,y) in image
+  """
+>>>>>>> 5afd9c16b15a644c659fc0bb1142ff4983a49ae9
     # determine pixel high left of region of interest:
     index_col_hl = (ind_x * stride) - padding
     index_raw_hl = (ind_y * stride) - padding
@@ -683,10 +699,20 @@ def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, l
     if region.shape != (filter_size, filter_size):
         region = cv2.resize(region, (filter_size, filter_size), interpolation=cv2.INTER_AREA)
 
+<<<<<<< HEAD
     return region, begin_col, end_col, begin_raw, end_raw
 
 
 def get_region_layer2(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+=======
+    return region
+
+
+def get_region_layer2(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+    """
+  return region of interest from index (x,y)
+  """
+>>>>>>> 5afd9c16b15a644c659fc0bb1142ff4983a49ae9
     region_shape = 7
     # determine pixel high left of region of interest:
     index_col_hl = (ind_x * stride) - padding
@@ -739,6 +765,12 @@ def get_filter_layer2():
 
 
 def get_region_layer3(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+<<<<<<< HEAD
+=======
+    """
+  return region of interest from index (x,y)
+  """
+>>>>>>> 5afd9c16b15a644c659fc0bb1142ff4983a49ae9
     region_shape = 15
     # determine pixel high left of region of interest:
     index_col_hl = (ind_x * stride) - padding
@@ -807,6 +839,12 @@ def get_filter_layer3():
 
 
 def get_region_layer4(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+<<<<<<< HEAD
+=======
+    """
+  return region of interest from index (x,y)
+  """
+>>>>>>> 5afd9c16b15a644c659fc0bb1142ff4983a49ae9
     region_shape = 31
     # determine pixel high left of region of interest:
     index_col_hl = (ind_x * stride) - padding
@@ -862,6 +900,7 @@ def get_region_layer4(image, ind_x, ind_y, name, stride, padding, filter_size, l
         region = cv2.resize(region, (region_shape, region_shape), interpolation=cv2.INTER_AREA)
 
     return region
+<<<<<<< HEAD
 
 
 def get_filter_layer4():
@@ -898,6 +937,44 @@ def get_filter_layer4():
                       [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1]]))
 
 
+=======
+
+
+def get_filter_layer4():
+    return np.array(([[1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [2, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 2],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1],
+                      [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1]]))
+
+
+>>>>>>> 5afd9c16b15a644c659fc0bb1142ff4983a49ae9
 def get_all_regions_max(loader, activations):
     dataiter = iter(loader)
     images, _ = dataiter.next()
