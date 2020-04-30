@@ -1,15 +1,11 @@
+import sys
+sys.path.append('')
 import torch.optim as optim
 from DataLoader.dataLoaders import get_mnist_dataloaders
-from utils.training import test, run
+from utils.training import run
 from utils.models import get_my_model_MNIST
-from torch import load
-import torch
+import torch.nn.functional as F
 
-from utils.models import NoBinaryNetMnist
-
-"""
-Code source: https://github.com/Wizaron/binary-stochastic-neurons
-"""
 
 # parameters default values
 lr = 0.1
