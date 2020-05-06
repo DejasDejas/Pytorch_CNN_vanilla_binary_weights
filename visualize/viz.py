@@ -15,6 +15,7 @@ from PIL import Image
 import collections
 from functools import partial
 import cv2
+from numpy import linalg as LA
 
 
 class GradientAscent:
@@ -45,7 +46,7 @@ class GradientAscent:
     # Public interface #
     ####################
 
-    def __init__(self, model, img_size=224, zoom=False, filter_size=None, lr=1., use_gpu=False):
+    def __init__(self, model, nb_channels=3, img_size=224, zoom=False, filter_size=None, lr=1., use_gpu=False):
         self.model = model
         self._img_size = img_size
         self._lr = lr
@@ -55,9 +56,9 @@ class GradientAscent:
         self.num_layers = len(list(self.model.named_children()))
         self.activation = None
         self.gradients = None
+        self.nb_channels = nb_channels
 
         self.handlers = []
-
         self.output = None
 
         if self.zoom:
@@ -114,8 +115,12 @@ class GradientAscent:
         # Inisialize input (as noise) if not provided
 
         if input_ is None:
-            input_ = np.uint8(np.random.uniform(
-                150, 180, (self._img_size, self._img_size, 1)))
+            if self.nb_channels==3:
+                input_ = np.uint8(np.random.uniform(
+                0, 255, (self._img_size, self._img_size, 3))/255)
+            else:
+                input_ = np.uint8(np.random.uniform(
+                    0, 255, (self._img_size, self._img_size, 1))/255)
             input_ = apply_transforms(input_, size=self._img_size)
 
         if torch.cuda.is_available() and self.use_gpu:
@@ -123,7 +128,6 @@ class GradientAscent:
             input_ = input_.to('cuda')
 
         # Remove previous hooks if any
-
         while len(self.handlers) > 0:
             self.handlers.pop().remove()
 
@@ -245,9 +249,14 @@ class GradientAscent:
                 self.gradients = grad_in[0]
 
         for _, module in self.model.named_modules():
-            if isinstance(module, nn.modules.conv.Conv2d) and \
-                    module.in_channels == 1:
-                return module.register_backward_hook(_record_gradients)
+            if self.nb_channels==3:
+                if isinstance(module, nn.modules.conv.Conv2d) and \
+                        module.in_channels == 3:
+                    return module.register_backward_hook(_record_gradients)
+            else:
+                if isinstance(module, nn.modules.conv.Conv2d) and \
+                        module.in_channels == 1:
+                    return module.register_backward_hook(_record_gradients)                
 
     def _ascent(self, x, num_iter):
         output = []
@@ -660,7 +669,7 @@ def standardize_and_clip(tensor, MNIST, min_value=0.0, max_value=1.0,
 #####################################################
 
 
-def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w):
+def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w, return_all=False):
 
     # determine pixel high left of region of interest:
     index_col_hl = (ind_x * stride) - padding
@@ -687,11 +696,14 @@ def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, l
     if end_raw > len_img_h:
         end_raw = len_img_h
 
-    region = image[begin_raw:end_raw, begin_col:end_col]
+    region = image[begin_col:end_col,begin_raw:end_raw]
     if region.shape != (filter_size, filter_size):
         region = cv2.resize(region, (filter_size, filter_size), interpolation=cv2.INTER_AREA)
 
-    return region, begin_col, end_col, begin_raw, end_raw
+    if return_all:
+        return region, begin_col, end_col, begin_raw, end_raw
+    else:
+        return region
 
 
 
@@ -731,7 +743,7 @@ def get_region_layer2(image, ind_x, ind_y, name, stride, padding, filter_size, l
     if end_raw > len_img_h:
         end_raw = len_img_h
 
-    region = image[begin_raw:end_raw, begin_col:end_col]
+    region = image[begin_col:end_col,begin_raw:end_raw]
     if region.shape != (region_shape, region_shape):
         region = cv2.resize(region, (region_shape, region_shape), interpolation=cv2.INTER_AREA)
 
@@ -792,7 +804,7 @@ def get_region_layer3(image, ind_x, ind_y, name, stride, padding, filter_size, l
     if end_raw > len_img_h:
         end_raw = len_img_h
 
-    region = image[begin_raw:end_raw, begin_col:end_col]
+    region = image[begin_col:end_col,begin_raw:end_raw]
     if region.shape != (region_shape, region_shape):
         region = cv2.resize(region, (region_shape, region_shape), interpolation=cv2.INTER_AREA)
 
@@ -869,7 +881,7 @@ def get_region_layer4(image, ind_x, ind_y, name, stride, padding, filter_size, l
     if end_raw > len_img_h:
         end_raw = len_img_h
 
-    region = image[begin_raw:end_raw, begin_col:end_col]
+    region = image[begin_col:end_col,begin_raw:end_raw]
     if region.shape != (region_shape, region_shape):
         region = cv2.resize(region, (region_shape, region_shape), interpolation=cv2.INTER_AREA)
 
@@ -910,7 +922,7 @@ def get_filter_layer4():
                       [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1]]))
 
 
-def get_all_regions_max(loader, activations, stride, padding, filter_size):
+def get_all_regions_max(loader, activations, stride, padding, filter_size, len_img_h, len_img_w):
 
     dataiter = iter(loader)
     images, _ = dataiter.next()
@@ -919,6 +931,7 @@ def get_all_regions_max(loader, activations, stride, padding, filter_size):
     print('begin extraction regions')
     region_final = {}
     activation_final = {}
+    activation_final_normalized = {}
 
     filter_layer2 = get_filter_layer2()
     filter_layer3 = get_filter_layer3()
@@ -929,9 +942,11 @@ def get_all_regions_max(loader, activations, stride, padding, filter_size):
         if name == 'layer1':
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 3, 3))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
+            activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
         if name == 'layer2':
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 7, 7))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
+            activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
         if name == 'layer3':
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 15, 15))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
@@ -945,10 +960,12 @@ def get_all_regions_max(loader, activations, stride, padding, filter_size):
             if name == 'layer1':
                 regions_im_j = np.zeros((fm.shape[1], 3, 3))  # initialise empty list of regions for batch batch
                 activation_im_j = np.zeros((fm.shape[1]))
+                activation_im_j_normalized = np.zeros((fm.shape[1]))
             if name == 'layer2':
                 regions_im_j = np.zeros((fm.shape[1], 7, 7))
                 regions_im_j = (regions_im_j * filter_layer2) / 4
                 activation_im_j = np.zeros((fm.shape[1]))
+                activation_im_j_normalized = np.zeros((fm.shape[1]))
             if name == 'layer3':
                 regions_im_j = np.zeros((fm.shape[1], 15, 15))
                 regions_im_j = (regions_im_j * filter_layer3) / 4
@@ -958,28 +975,31 @@ def get_all_regions_max(loader, activations, stride, padding, filter_size):
                 regions_im_j = (regions_im_j * filter_layer4) / 4
                 activation_im_j = np.zeros((fm.shape[1]))
             for i in range(fm.shape[1]):  # for all fm in image j
-                # act_max = max(fm[j][i].min(), fm[j][i].max(), key=abs)  # get max activation value in fm j
+                # act_max = max(fm[j][i], key=abs)  # get max abs activation value in fm j
                 act_max = fm[j][i].max()
                 ind_x = int((np.where(fm[j][i] == act_max)[0])[0])  # get index (x,y) of act_max
                 ind_y = int((np.where(fm[j][i] == act_max)[1])[0])
 
                 if name == 'layer1':
-                    region = get_region_layer1(im, ind_x, ind_y, name, stride, padding, filter_size)
+                    region = get_region_layer1(im, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w)
                 if name == 'layer2':
-                    region = get_region_layer2(im, ind_x, ind_y, name, stride, padding, filter_size)
+                    region = get_region_layer2(im, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w)
                 if name == 'layer3':
-                    region = get_region_layer3(im, ind_x, ind_y, name, stride, padding, filter_size)
+                    region = get_region_layer3(im, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w)
                 if name == 'layer4':
-                    region = get_region_layer4(im, ind_x, ind_y, name, stride, padding, filter_size)
+                    region = get_region_layer4(im, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w)
 
                 regions_im_j[i] = region
                 activation_im_j[i] = act_max.detach().numpy()
+                activation_im_j_normalized[i] = (act_max.detach().numpy())/LA.norm(region, 1)
             regions_layer[j] = regions_im_j
             activation_layer[j] = activation_im_j
+            activation_layer_normalized[j] = activation_im_j_normalized
         region_final[name] = regions_layer
         activation_final[name] = activation_layer
+        activation_final_normalized[name]= activation_layer_normalized
 
-    return region_final, activation_final
+    return region_final, activation_final, activation_final_normalized
 
 
 #####################################
@@ -987,7 +1007,7 @@ def get_all_regions_max(loader, activations, stride, padding, filter_size):
 #####################################
 
 
-def get_regions_interest(regions, activation, best, worst, viz_mean_img, viz_grid, percentage=None, list_filter=None):
+def get_regions_interest(regions, activation, activations_normalized, best, worst, viz_mean_img, viz_grid, percentage=None, list_filter=None):
     """
   get regions of interest
   """
@@ -1003,23 +1023,29 @@ def get_regions_interest(regions, activation, best, worst, viz_mean_img, viz_gri
         print('Interest of all filters')
         regions_interest_filter = regions
         activations_values_interest = activation
+        activations_values_interest_normalized = activations_normalized
         nb_filter = nb_filter
     else:
         # assert max(list_filter) < nb_filter and min(list_filter) >= 0, 'filter choisen out of range'
         print('Interest of filters:', list_filter)
         regions_interest_filter = get_index_filter_interest(regions, list_filter)
         activations_values_interest = activation[:, list_filter]
+        activations_values_interest_normalized = activations_normalized[:, list_filter]
         nb_filter = len(list_filter)
 
     # consider a percent of best or worst activations:
     if percentage == None:
         print('Consider all image regions')
         selected_regions = regions_interest_filter
+        activation_values = activation[:, list_filter]
+        activation_values_normalized = activations_normalized[:, list_filter]
     else:
         assert percentage <= 100 and percentage >= 0, 'percentage value must be in 0 and 100'
         n = int((len(activation) * percentage) / 100)
         print('Consider {}% image regions = {} images'.format(percentage, n))
-        selected_regions = get_n_first_regions_index(best, worst, n, activations_values_interest, nb_filter,
+        selected_regions, activation_values = get_n_first_regions_index(best, worst, n, activations_values_interest, nb_filter,
+                                                     regions_interest_filter)
+        selected_regions_normalized, activation_values_normalized = get_n_first_regions_index(best, worst, n, activations_values_interest_normalized, nb_filter,
                                                      regions_interest_filter)
 
     nb_regions = selected_regions[0].shape[0]
@@ -1032,13 +1058,20 @@ def get_regions_interest(regions, activation, best, worst, viz_mean_img, viz_gri
             print('mean regions of {} regions more={} or worst={} active for filter number: {} :'.format(n, best, worst,
                                                                                                          ind_filter))
             mean_img = np.mean(selected_regions[i], 0)
-            mean_img_1 = (mean_img - np.min(mean_img))/(np.max(mean_img)-np.min(mean_img))
-            mean_img_2 = (mean_img*0.3081)+0.1307
+            # mean_img_1 = (mean_img - np.min(mean_img))/(np.max(mean_img)-np.min(mean_img))
+            # mean_img_2 = (mean_img*0.3081)+0.1307
             
-            # viz_regions(nb_image, np.flip(mean_img_1,0))
-            print(mean_img_2.shape)
-            viz_regions(nb_image, mean_img_2[range(mean_img_2.shape[0]-1,-1,-1),:])
-            viz_regions(nb_image, mean_img_2)
+            # viz_regions(nb_image, mean_img_2[range(mean_img_2.shape[0]-1,-1,-1),:])  #inverse image
+            # viz_regions(nb_image, mean_img_2)
+            # viz_regions(nb_image, mean_img_1)
+            viz_regions(nb_image, mean_img)
+            plt.show()
+            print('normalized region:')
+            mean_img_normalized = np.mean(selected_regions_normalized[i], 0)
+            viz_regions(nb_image, mean_img_normalized)
+            plt.show()
+            
+
 
     if viz_grid:
         nb_image = nb_regions
@@ -1050,8 +1083,16 @@ def get_regions_interest(regions, activation, best, worst, viz_mean_img, viz_gri
             for j in range(nb_regions):
                 region_to_print.append(selected_regions[i][j])
             viz_regions(nb_image, region_to_print)
+            plt.show()
+            
+            print('normalized regions:')
+            region_to_print_normalized = []
+            for j in range(nb_regions):
+                region_to_print_normalized.append(selected_regions_normalized[i][j])
+            viz_regions(nb_image, region_to_print_normalized)
+            plt.show()
 
-    return selected_regions
+    return selected_regions, activation_values, activation_values_normalized
 
 
 def viz_regions(nb_image, regions):
@@ -1070,17 +1111,20 @@ def get_n_first_regions_index(best, worst, n, activation, nb_filter, regions):
   select only regions that we want 
   """
     regions_selected = []
+    activation_values = []
     if best:
         for i in range(nb_filter):
             ind_filter = (-activation[:, i]).argsort()[:n]
             regions_selected.append(regions[ind_filter, i])
-        return regions_selected
+            activation_values.append(activation[ind_filter, i])
+        return regions_selected, activation_values
 
     elif worst:
         for i in range(nb_filter):
             ind_filter = activation[:, i].argsort()[:n]
             regions_selected.append(regions[ind_filter, i])
-        return regions_selected
+            activation_values.append(activation[ind_filter, i])
+        return regions_selected, activation_values
 
     else:
         print('choice worst or best with bool True or False')

@@ -13,15 +13,17 @@ def get_mnist_dataloaders(batch_size_train, batch_size_test):
     """
     # train loader
     train_data = datasets.MNIST('./data', train=True, download=True,
-                                transform=transforms.Compose([transforms.ToTensor(),
-                                                              transforms.Normalize((0.1307,),
-                                                                                   (0.3081,))]))
+                                transform=transforms.Compose([transforms.ToTensor()
+                                                              #transforms.Normalize((0.1307,),
+                                                               #                    (0.3081,))
+                                                               ]))
 
     # test_loaer
     test_loader = DataLoader(datasets.MNIST('./data', train=False,
-                                            transform=transforms.Compose([transforms.ToTensor(),
-                                                                          transforms.Normalize((0.1307,),
-                                                                                               (0.3081,))])),
+                                            transform=transforms.Compose([transforms.ToTensor()
+                                                                          # transforms.Normalize((0.1307,),
+                                                                          #                     (0.3081,))
+                                                                          ])),
                              batch_size=batch_size_test, shuffle=False)
 
     # to split valid data
