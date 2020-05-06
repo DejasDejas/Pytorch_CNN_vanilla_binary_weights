@@ -123,11 +123,11 @@ class NoBinaryNetMnist(Net):
         self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1, stride=2)
         self.batchnorm1 = nn.BatchNorm2d(10)
         # self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.act_layer1 = Hardsigmoid()
+        self.act_layer1 = nn.ReLU()  # Hardsigmoid()
         self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2)
         self.batchnorm2 = nn.BatchNorm2d(20)
         # self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.act_layer2 = Hardsigmoid()
+        self.act_layer2 = nn.ReLU()  # Hardsigmoid()
         self.fc = nn.Linear(7 * 7 * 20, 10)
 
     def forward(self, input):
@@ -166,7 +166,7 @@ class BinaryNetMNIST(Net):
             elif self.mode == 'Stochastic':
                 self.act_layer1 = StochasticBinaryActivation(estimator=estimator)
         else:
-            self.act_layer1 = Hardsigmoid()
+            self.act_layer1 = nn.ReLU()  # Hardsigmoid()
         self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2)
         self.batchnorm2 = nn.BatchNorm2d(20)
         # self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -176,7 +176,7 @@ class BinaryNetMNIST(Net):
             elif self.mode == 'Stochastic':
                 self.act_layer2 = StochasticBinaryActivation(estimator=estimator)
         else:
-            self.act_layer2 = Hardsigmoid()
+            self.act_layer2 = nn.ReLU()  # Hardsigmoid()
         self.fc = nn.Linear(7 * 7 * 20, 10)
 
     def forward(self, input):
@@ -211,7 +211,7 @@ class NoBinaryNetOmniglotClassification(Net):
     def __init__(self):
         super(NoBinaryNetOmniglotClassification, self).__init__()
 
-        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, stride=1)
+        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, stride=2)
         self.batchNorm1 = nn.BatchNorm2d(64)
         # self.dropout1 = nn.Dropout(0.5) #50 % probability 
         # self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
