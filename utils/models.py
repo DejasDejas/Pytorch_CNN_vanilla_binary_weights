@@ -23,7 +23,7 @@ def fetch_last_checkpoint_model_filename(model_save_path):
 
 
 # Model, activation type, estimator type
-def get_my_model_MNIST(binary, stochastic=True, reinforce=False, first_conv_layer=True,
+def get_my_model_MNIST(binary, bias=True, stochastic=True, reinforce=False, first_conv_layer=True,
                        last_conv_layer=False):
     """
     build MNIST model
@@ -52,12 +52,18 @@ def get_my_model_MNIST(binary, stochastic=True, reinforce=False, first_conv_laye
             names_model += '_first_conv_binary'
         if last_conv_layer:
             names_model += '_last_conv_binary'
-        model = BinaryNetMNIST(first_conv_layer=first_conv_layer,
+        if not bias:
+            names_model += '_without_bias'
+            
+        model = BinaryNetMNIST(bias, first_conv_layer=first_conv_layer,
                                last_conv_layer=last_conv_layer, mode=mode,
                                estimator=estimator)
     else:
-        model = NoBinaryNetMnist()
-        names_model = 'MNIST_NonBinaryNet'
+        if not bias:
+            names_model = 'MNIST_NonBinaryNet_without_bias'
+        else:
+            names_model = 'MNIST_NonBinaryNet'
+        model = NoBinaryNetMnist(bias)
         mode = None
         estimator = None
     return model, names_model
@@ -117,14 +123,15 @@ class Net(nn.Module):
 
 
 class NoBinaryNetMnist(Net):
-    def __init__(self):
+    def __init__(self, bias):
         super(NoBinaryNetMnist, self).__init__()
-
-        self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1, stride=2)
+        
+        self.bias = bias
+        self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1, stride=2, bias=self.bias)
         self.batchnorm1 = nn.BatchNorm2d(10)
         # self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer1 = nn.ReLU()  # Hardsigmoid()
-        self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2)
+        self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2, bias=self.bias)
         self.batchnorm2 = nn.BatchNorm2d(20)
         # self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer2 = nn.ReLU()  # Hardsigmoid()
@@ -144,7 +151,7 @@ class NoBinaryNetMnist(Net):
 
 
 class BinaryNetMNIST(Net):
-    def __init__(self, first_conv_layer, last_conv_layer, mode='Deterministic', estimator='ST'):
+    def __init__(self, bias, first_conv_layer, last_conv_layer, mode='Deterministic', estimator='ST'):
         super(BinaryNetMNIST, self).__init__()
 
         assert mode in ['Deterministic', 'Stochastic']
@@ -152,12 +159,13 @@ class BinaryNetMNIST(Net):
         # if mode == 'Deterministic':
         #    assert estimator == 'ST'
 
+        self.bias = bias
         self.mode = mode
         self.estimator = estimator
         self.first_conv_layer = first_conv_layer
         self.last_conv_layer = last_conv_layer
 
-        self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1, stride=2)
+        self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1, stride=2, bias=self.bias)
         self.batchnorm1 = nn.BatchNorm2d(10)
         # self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         if self.first_conv_layer:
@@ -167,7 +175,7 @@ class BinaryNetMNIST(Net):
                 self.act_layer1 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer1 = nn.ReLU()  # Hardsigmoid()
-        self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2)
+        self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2, bias=self.bias)
         self.batchnorm2 = nn.BatchNorm2d(20)
         # self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         if self.last_conv_layer:

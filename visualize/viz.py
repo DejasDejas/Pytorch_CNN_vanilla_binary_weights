@@ -991,7 +991,13 @@ def get_all_regions_max(loader, activations, stride, padding, filter_size, len_i
 
                 regions_im_j[i] = region
                 activation_im_j[i] = act_max.detach().numpy()
-                activation_im_j_normalized[i] = (act_max.detach().numpy())/LA.norm(region, 1)
+                norme = LA.norm(region, 1)
+                if norme == 0.0:
+                    print('norm null')
+                    activation_im_j_normalized[i]=act_max.detach().numpy()
+                else:
+                    activation_im_j_normalized[i] = act_max.detach().numpy()/norme
+                # print('region values: {}, with activation: {} and norme for this region: {} and result: act/norm: {}'.format(region, act_max, LA.norm(region, 1), activation_im_j_normalized[i]))
             regions_layer[j] = regions_im_j
             activation_layer[j] = activation_im_j
             activation_layer_normalized[j] = activation_im_j_normalized
@@ -1007,7 +1013,7 @@ def get_all_regions_max(loader, activations, stride, padding, filter_size, len_i
 #####################################
 
 
-def get_regions_interest(regions, activation, activations_normalized, best, worst, viz_mean_img, viz_grid, percentage=None, list_filter=None):
+def get_regions_interest(regions, activation, activations_normalized, best, worst, viz_mean_img, viz_grid,   percentage=None, list_filter=None, nrow=8):
     """
   get regions of interest
   """
@@ -1061,14 +1067,14 @@ def get_regions_interest(regions, activation, activations_normalized, best, wors
             # mean_img_1 = (mean_img - np.min(mean_img))/(np.max(mean_img)-np.min(mean_img))
             # mean_img_2 = (mean_img*0.3081)+0.1307
             
-            # viz_regions(nb_image, mean_img_2[range(mean_img_2.shape[0]-1,-1,-1),:])  #inverse image
-            # viz_regions(nb_image, mean_img_2)
-            # viz_regions(nb_image, mean_img_1)
-            viz_regions(nb_image, mean_img)
+            # viz_regions(nb_image, mean_img_2[range(mean_img_2.shape[0]-1,-1,-1),:], nrow)  #inverse image
+            # viz_regions(nb_image, mean_img_2, nrow)
+            # viz_regions(nb_image, mean_img_1, nrow)
+            viz_regions(nb_image, mean_img, nrow)
             plt.show()
             print('normalized region:')
             mean_img_normalized = np.mean(selected_regions_normalized[i], 0)
-            viz_regions(nb_image, mean_img_normalized)
+            viz_regions(nb_image, mean_img_normalized, nrow)
             plt.show()
             
 
@@ -1082,26 +1088,26 @@ def get_regions_interest(regions, activation, activations_normalized, best, wors
                                                                                                          ind_filter))
             for j in range(nb_regions):
                 region_to_print.append(selected_regions[i][j])
-            viz_regions(nb_image, region_to_print)
+            viz_regions(nb_image, region_to_print, nrow)
             plt.show()
             
             print('normalized regions:')
             region_to_print_normalized = []
             for j in range(nb_regions):
                 region_to_print_normalized.append(selected_regions_normalized[i][j])
-            viz_regions(nb_image, region_to_print_normalized)
+            viz_regions(nb_image, region_to_print_normalized, nrow)
             plt.show()
 
     return selected_regions, activation_values, activation_values_normalized
 
 
-def viz_regions(nb_image, regions):
+def viz_regions(nb_image, regions, nrow):
     """
   visualize region of interest
   """
     regions = torch.tensor(regions)
     regions = regions.reshape((nb_image, 1, regions.shape[-2], regions.shape[-1]))
-    visTensor(regions, ch=0, allkernels=False)
+    visTensor(regions, ch=0, allkernels=False, nrow=nrow)
     plt.ioff()
     plt.show()
 
