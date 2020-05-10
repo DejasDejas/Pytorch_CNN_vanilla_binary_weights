@@ -698,7 +698,12 @@ def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, l
 
     region = image[begin_col:end_col,begin_raw:end_raw]
     if region.shape != (filter_size, filter_size):
-        region = cv2.resize(region.numpy(), (filter_size, filter_size), interpolation=cv2.INTER_AREA)
+        print(type(region))
+        print(region.shape)
+        if type(region) == np.ndarray:
+            region = cv2.resize(region, (filter_size, filter_size), interpolation=cv2.INTER_AREA)
+        else:
+            region = cv2.resize(region.numpy(), (filter_size, filter_size), interpolation=cv2.INTER_AREA)
 
     if return_all:
         return region, begin_col, end_col, begin_raw, end_raw
@@ -999,7 +1004,6 @@ def get_all_regions_max(images, loader, activations, stride, padding, filter_siz
                     activation_im_j_normalized[i]=act_max.detach().numpy()
                 else:
                     activation_im_j_normalized[i] = act_max.detach().numpy()/norme
-                # print('region values: {}, with activation: {} and norme for this region: {} and result: act/norm: {}'.format(region, act_max, LA.norm(region, 1), activation_im_j_normalized[i]))
             regions_layer[j] = regions_im_j
             activation_layer[j] = activation_im_j
             activation_layer_normalized[j] = activation_im_j_normalized
