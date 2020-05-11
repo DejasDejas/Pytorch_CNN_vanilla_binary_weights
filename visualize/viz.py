@@ -696,15 +696,21 @@ def get_region_layer1(image, ind_x, ind_y, name, stride, padding, filter_size, l
     if end_raw > len_img_h:
         end_raw = len_img_h
 
+    # print('index start: {}, {}'.format(ind_x, ind_y))
+    # print('index hl: {}, {}'.format(index_col_hl, index_raw_hl))
+    # print('index extract region: {}, {}, {}, {}'.format(begin_col, end_col, begin_raw, end_raw))
     region = image[begin_col:end_col,begin_raw:end_raw]
+    # plt.imshow(region, cmap='gray')
+    # plt.show()
     if region.shape != (filter_size, filter_size):
-        print(type(region))
+        # print(type(region))
         print(region.shape)
         if type(region) == np.ndarray:
             region = cv2.resize(region, (filter_size, filter_size), interpolation=cv2.INTER_AREA)
         else:
             region = cv2.resize(region.numpy(), (filter_size, filter_size), interpolation=cv2.INTER_AREA)
-
+        # plt.imshow(region, cmap='gray')
+        # plt.show()
     if return_all:
         return region, begin_col, end_col, begin_raw, end_raw
     else:
@@ -943,6 +949,8 @@ def get_all_regions_max(images, loader, activations, stride, padding, filter_siz
     filter_layer4 = get_filter_layer4()
 
     for name, fm in activations.items():
+        if name == 'layer5':
+            break
         # for each image of fm
         if name == 'layer1':
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 3, 3))
@@ -955,9 +963,11 @@ def get_all_regions_max(images, loader, activations, stride, padding, filter_siz
         if name == 'layer3':
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 15, 15))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
+            activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
         if name == 'layer4':
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 31, 31))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
+            activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
         for j in range(fm.shape[0]):
             print('treating image n {}/{}, for layer: {}'.format(j, fm.shape[0], name))
 
@@ -975,15 +985,18 @@ def get_all_regions_max(images, loader, activations, stride, padding, filter_siz
                 regions_im_j = np.zeros((fm.shape[1], 15, 15))
                 regions_im_j = (regions_im_j * filter_layer3) / 4
                 activation_im_j = np.zeros((fm.shape[1]))
+                activation_im_j_normalized = np.zeros((fm.shape[1]))
             if name == 'layer4':
                 regions_im_j = np.zeros((fm.shape[1], 31, 31))
                 regions_im_j = (regions_im_j * filter_layer4) / 4
                 activation_im_j = np.zeros((fm.shape[1]))
+                activation_im_j_normalized = np.zeros((fm.shape[1]))
             for i in range(fm.shape[1]):  # for all fm in image j
                 # act_max = max(fm[j][i], key=abs)  # get max abs activation value in fm j
                 act_max = fm[j][i].max()
                 ind_x = int((np.where(fm[j][i] == act_max)[0])[0])  # get index (x,y) of act_max
                 ind_y = int((np.where(fm[j][i] == act_max)[1])[0])
+                activation_im_j_normalized = np.zeros((fm.shape[1]))
 
                 if name == 'layer1':
                     region, begin_col, end_col, begin_raw, end_raw  = get_region_layer1(im, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w, return_all=True)
@@ -999,11 +1012,12 @@ def get_all_regions_max(images, loader, activations, stride, padding, filter_siz
                 norme = LA.norm(region, 1)
                 if norme == 0.0:
                     print('norm null for filter: {}, image: {} with activation:{}, index({},{})'.format(i, j, act_max, ind_x, ind_y))
-                    plt.imshow(im, cmap='gray')
-                    plt.show()
+                    # plt.imshow(im, cmap='gray')
+                    # plt.show()
                     activation_im_j_normalized[i]=act_max.detach().numpy()
                 else:
                     activation_im_j_normalized[i] = act_max.detach().numpy()/norme
+                # print('image: {}, filter: {}, region: {}, with act: {}, index:({}, {})'.format(j, i, region, act_max, ind_x, ind_y))
             regions_layer[j] = regions_im_j
             activation_layer[j] = activation_im_j
             activation_layer_normalized[j] = activation_im_j_normalized
