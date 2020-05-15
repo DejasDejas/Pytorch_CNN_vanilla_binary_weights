@@ -933,7 +933,7 @@ def get_filter_layer4():
                       [1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1]]))
 
 
-def get_all_regions_max(images, labels, activations, stride, padding, filter_size, len_img_h, len_img_w):
+def get_all_regions_max(images, activations, stride, padding, filter_size, len_img_h, len_img_w):
 
     print('nb images: {}'.format(len(images)))
 
@@ -941,7 +941,6 @@ def get_all_regions_max(images, labels, activations, stride, padding, filter_siz
     region_final = {}
     activation_final = {}
     activation_final_normalized = {}
-    labels_final = labels
 
     filter_layer2 = get_filter_layer2()
     filter_layer3 = get_filter_layer3()
@@ -951,11 +950,11 @@ def get_all_regions_max(images, labels, activations, stride, padding, filter_siz
         if name == 'layer5':
             break
         # for each image of fm
-        if name == 'layer1':
+        if 'layer1' in name:
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 3, 3))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
             activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
-        if name == 'layer2':
+        if 'layer2'in name:
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 7, 7))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
             activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
@@ -971,11 +970,11 @@ def get_all_regions_max(images, labels, activations, stride, padding, filter_siz
             print('treating image n {}/{}, for layer: {}'.format(j, fm.shape[0], name))
 
             im = images[j].unsqueeze(0).numpy().squeeze()  # image i of batch batch: numpy array: (28,28)
-            if name == 'layer1':
+            if 'layer1' in name:
                 regions_im_j = np.zeros((fm.shape[1], 3, 3))  # initialise empty list of regions for batch
                 activation_im_j = np.zeros((fm.shape[1]))
                 activation_im_j_normalized = np.zeros((fm.shape[1]))
-            if name == 'layer2':
+            if 'layer2' in name:
                 regions_im_j = np.zeros((fm.shape[1], 7, 7))
                 regions_im_j = (regions_im_j * filter_layer2) / 4
                 activation_im_j = np.zeros((fm.shape[1]))
@@ -997,9 +996,9 @@ def get_all_regions_max(images, labels, activations, stride, padding, filter_siz
                 ind_y = int((np.where(fm[j][i] == act_max)[1])[0])
                 activation_im_j_normalized = np.zeros((fm.shape[1]))
 
-                if name == 'layer1':
+                if 'layer1' in name:
                     region, begin_col, end_col, begin_raw, end_raw  = get_region_layer1(im, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w, return_all=True)
-                if name == 'layer2':
+                if 'layer2' in name:
                     region = get_region_layer2(im, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w)
                 if name == 'layer3':
                     region = get_region_layer3(im, ind_x, ind_y, name, stride, padding, filter_size, len_img_h, len_img_w)
@@ -1015,16 +1014,16 @@ def get_all_regions_max(images, labels, activations, stride, padding, filter_siz
                     # plt.show()
                     activation_im_j_normalized[i]=act_max.detach().numpy()
                 else:
-                    activation_im_j_normalized[i] = act_max.detach().numpy()/norme
+                    activation_im_j_normalized[i]=act_max.detach().numpy()/norme
                 # print('image: {}, filter: {}, region: {}, with act: {}, index:({}, {})'.format(j, i, region, act_max, ind_x, ind_y))
             regions_layer[j] = regions_im_j
             activation_layer[j] = activation_im_j
             activation_layer_normalized[j] = activation_im_j_normalized
         region_final[name] = regions_layer
         activation_final[name] = activation_layer
-        activation_final_normalized[name]= activation_layer_normalized
+        activation_final_normalized[name] = activation_layer_normalized
 
-    return region_final, labels_final, activation_final, activation_final_normalized
+    return region_final, activation_final, activation_final_normalized
 
 
 #####################################
@@ -1032,7 +1031,7 @@ def get_all_regions_max(images, labels, activations, stride, padding, filter_siz
 #####################################
 
 
-def get_regions_interest(regions, labels, activation, activations_normalized, best=True, worst=False, viz_mean_img=True, viz_grid=True, percentage=None, list_filter=None, nrow=8, plot_histogram=False):
+def get_regions_interest(regions, labels, activation, activations_normalized, details=False, best=True, worst=False, viz_mean_img=True, viz_grid=True, percentage=None, list_filter=None, nrow=8, plot_histogram=False, bins=20):
     """
   get regions of interest
   """
@@ -1049,7 +1048,6 @@ def get_regions_interest(regions, labels, activation, activations_normalized, be
         regions_interest_filter = regions
         activations_values_interest = activation
         activations_values_interest_normalized = activations_normalized
-        nb_filter = nb_filter
         list_filter = range(nb_filter)
     else:
         # assert max(list_filter) < nb_filter and min(list_filter) >= 0, 'filter choisen out of range'
@@ -1063,6 +1061,7 @@ def get_regions_interest(regions, labels, activation, activations_normalized, be
     # consider a percent of best or worst activations:
     if percentage == None:
         print('Consider all image regions')
+        nb_regions = activation.shape[0]
         selected_regions = regions_interest_filter
         activation_values = activation[:, list_filter]
         activation_values_normalized = activations_normalized[:, list_filter]
@@ -1070,9 +1069,10 @@ def get_regions_interest(regions, labels, activation, activations_normalized, be
         assert percentage <= 100 and percentage >= 0, 'percentage value must be in 0 and 100'
         n = int((len(activation) * percentage) / 100)
         print('Consider {}% image regions = {} images'.format(percentage, n))
-        selected_regions, activation_values = get_n_first_regions_index(best, worst, n, activations_values_interest, list_filter,
+        nb_regions = n
+        selected_regions, activation_values = get_n_first_regions_index(best, worst, n, activations_values_interest, nb_filter,
                                                      regions_interest_filter)
-        selected_regions_normalized, activation_values_normalized = get_n_first_regions_index(best, worst, n, activations_values_interest_normalized, list_filter,
+        selected_regions_normalized, activation_values_normalized = get_n_first_regions_index(best, worst, n, activations_values_interest_normalized, nb_filter,
                                                      regions_interest_filter)
                                                      
     # get labels for plot histogram:
@@ -1084,31 +1084,50 @@ def get_regions_interest(regions, labels, activation, activations_normalized, be
         print('mean image:')
         if plot_histogram:
             print('histogram of images repartition:')
-            plt.hist(labels_all, bins=n_bins)
+            plt.hist(labels_all, bins=bins)
+            plt.show()
             
-        for i, ind_filter in enumerate(list_filter):
-            print('mean regions of {} regions more={} or worst={} active for filter number: {} :'.format(n, best, worst,
-                                                                                                         ind_filter))
-            mean_img = np.mean(selected_regions[i], 0)
-            viz_regions(nb_image, mean_img, nrow)
-            plt.show()
-            if plot_histogram:
-                print('histogram for filter {}:'.format(ind_filter))
-                plt.hist(labels_selected[i], bins=n_bins)
+        if details:
+            for i, ind_filter in enumerate(list_filter):
                 
-            print('normalized region:')
-            mean_img_normalized = np.mean(selected_regions_normalized[i], 0)
-            viz_regions(nb_image, mean_img_normalized, nrow)
-            plt.show()
-            if plot_histogram:
-                print('Histogram for normalized activations:')
-                plt.hist(labels_selected_normalized[i], bins=n_bins)
+                print('mean regions of {} regions more={} or worst={} active for filter number: {} :'.format(n, best, worst,                                                                                         ind_filter))
+                mean_img = np.mean(selected_regions[i], 0)
+                viz_regions(nb_image, mean_img, nrow)
+                plt.show()
                 
-        if plot_histogram:
-            print('Histogram for all filters combined:')
-            plt.hist(labels_selected_all, bins=n_bins)
-            print('Histogram for normalized activations:')
-            plt.hist(labels_selected_all_normalized, bins=n_bins)
+                print('normalized region:')
+                mean_img_normalized = np.mean(selected_regions_normalized[i], 0)
+                viz_regions(nb_image, mean_img_normalized, nrow)
+                plt.show()
+                
+                if plot_histogram:
+                    print('histogram for filter {}:'.format(ind_filter))
+                    x = labels_selected[i]
+                    y = labels_selected_normalized[i]
+                    plt.hist([x, y], bins, alpha=0.75, label=['regular', 'normalized'])
+                    plt.show()
+                    
+            if plot_histogram:
+                print('Histogram for all filters combined:')
+                x = labels_selected_all
+                y = labels_selected_all_normalized
+                plt.hist([x, y], bins, alpha=0.75, label=['regular', 'normalized'])
+                plt.show() 
+                
+        else:
+            to_visualize = []
+            to_visualize_normalized = []
+            for i, ind_filter in enumerate(list_filter):
+                mean_img = np.mean(selected_regions[i], 0)
+                mean_img_normalized = np.mean(selected_regions_normalized[i], 0)
+                to_visualize.append(mean_img)
+                to_visualize_normalized.append(mean_img_normalized)
+            print('mean regions of {} regions who activate most filters:'.format(n))
+            viz_regions(len(to_visualize), to_visualize, 10)
+            plt.show()
+            print('With normalized activations:')
+            viz_regions(len(to_visualize_normalized), to_visualize_normalized, 10)
+            plt.show()
 
     if viz_grid:
         nb_image = nb_regions
@@ -1132,6 +1151,10 @@ def get_regions_interest(regions, labels, activation, activations_normalized, be
     return selected_regions, activation_values, activation_values_normalized
 
 
+def resume_mean_regions(regions, labels, activation, activations_normalized):
+    get_regions_interest(regions, labels, activation, activations_normalized,  details=False, viz_grid=False, percentage=percentage)
+
+
 def get_labels_histogram(labels, activation, activations_normalized, list_filter=None, best=True, worst=False, percentage=None, plot=True, return_values=False, n_bins = 20):
     """
     labels_all: contain all labels to plot histo
@@ -1140,69 +1163,121 @@ def get_labels_histogram(labels, activation, activations_normalized, list_filter
     labels_selected_all: contains labels of regions image who activated the n first (or last) filters for all filter combined histo
     labels_selected_all_normalized: idem for activation normalized
     """
-    
+    if best == False and worst == False:
+        assert percentage != None, "if don't choice best or worst value, you didn't choice a percentage value"
+    if best == True and worst == True:
+        raise TypeError('choice only one value at True between best an worst')
+        
     if list_filter is None:
         activations_values_interest = activation
-        list_filter = range(nb_filter)
+        activations_values_interest_normalized = activations_normalized
+        list_filter = range(activations_values_interest.shape[1])
     else:
         activations_values_interest = activation[:, list_filter]
+        activations_values_interest_normalized = activations_normalized[:, list_filter]
         
-    nb_filter = activations_values_interest.shape[1]
-
     # plot histogram for all images:
     labels_all = labels
-    print('Histogram of labels for all images choisen:')
-    plt.hist(labels_all, bins=n_bins)
-    
+    if plot:
+        print('Histogram of labels for all images:')
+        plt.hist(labels_all, bins=n_bins)
+        plt.show()
+        
     # plot histogram for n first activations:
-    if percentage not None:
+    if percentage is not None:
         assert percentage <= 100 and percentage >= 0, 'percentage value must be in 0 and 100'
         n = int((len(activation) * percentage) / 100)
         print('Consider {}% image regions = {} images'.format(percentage, n))
         labels_selected = []
         labels_selected_normalized = []
         if best:
-            for i, ind_filter in enumerate(list_filter):
-                ind_filter = (-activation[:, i]).argsort()[:n]
+            for i, filt in enumerate(list_filter):
+                ind_filter = (-activations_values_interest[:, i]).argsort()[:n]
                 labels_selected.append(labels[ind_filter])
                 if plot:
-                    print('Histogram for filter {} with the {} first regions who actived it:'.format(ind_filter, n))
+                    print('Histogram for filter {} with the {} first regions who actived it:'.format(filt, n))
                     plt.hist(labels_selected[i], bins=n_bins)
-                
-                ind_filter_normalized = (-activation[:, i]).argsort()[:n]
+                    plt.show()
+                ind_filter_normalized = (-activations_values_interest_normalized[:, i]).argsort()[:n]
                 labels_selected_normalized.append(labels[ind_filter_normalized])
                 if plot:
                     print('Histo for activations normalized:')
                     plt.hist(labels_selected_normalized[i], bins=n_bins)
+                    plt.show()
         elif worst:
-            for i, ind_filter in enumerate(list_filter):
-                ind_filter = activation[:, i].argsort()[:n]
+            for i, filt in enumerate(list_filter):
+                ind_filter = activations_values_interest[:, i].argsort()[:n]
                 labels_selected.append(labels[ind_filter])
                 if plot:
-                    print('Histogram for filter {} with the {} first regions who actived it:'.format(ind_filter, n))
+                    print('Histogram for filter {} with the {} first regions who actived it:'.format(filt, n))
                     plt.hist(labels_selected[i], bins=n_bins)
+                    plt.show()
                 
-                ind_filter_normalized = activation[:, i].argsort()[:n]
+                ind_filter_normalized = activations_values_interest_normalized[:, i].argsort()[:n]
                 labels_selected_normalized.append(labels[ind_filter_normalized])
                 if plot:
                     print('Histo for activations normalized:')
                     plt.hist(labels_selected_normalized[i], bins=n_bins)
+                    plt.show()
         else:
             print('choice worst or best with bool True or False')
         
         # plot global histo: with all filters of list_filter
-        labels_selected_all = labels_selected.reshape((len(list_filter)*n, 1))
+        labels_selected_all = [val for sublist in labels_selected for val in sublist]
         if plot:
             print('Histogram for all filters in list_filter with the {} first regions for all filters combined:'.format(n))
             plt.hist(labels_selected_all, bins=n_bins)
+            plt.show()
         
-        labels_selected_all_normalized = labels_selected_normalized.reshape((len(list_filter)*n, 1))
+        labels_selected_all_normalized = [val for sublist in labels_selected_normalized for val in sublist]
         if plot:
             print('Histo for activations normalized:')
             plt.hist(labels_selected_all_normalized, bins=n_bins)
-            
+            plt.show()
+        
     if return_values:
         return labels_all, labels_selected, labels_selected_normalized, labels_selected_all, labels_selected_all_normalized
+
+    
+def scatter_hist(x, y, ax, ax_histx, ax_histy):
+    # no labels
+    ax_histx.tick_params(axis="x", labelbottom=False)
+    ax_histy.tick_params(axis="y", labelleft=False)
+
+    # the scatter plot:
+    ax.scatter(x, y)
+
+    # now determine nice limits by hand:
+    binwidth = 0.25
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    ax_histx.hist(x, bins=bins)
+    ax_histy.hist(y, bins=bins, orientation='horizontal')
+    
+    
+def compare_two_histograms(hist_1, hist_2):
+    # Scatter plot with histograms
+    # definitions for the axes
+    left, width = 0.1, 0.65
+    bottom, height = 0.1, 0.65
+    spacing = 0.005
+    
+    rect_scatter = [left, bottom, width, height]
+    rect_histx = [left, bottom + height + spacing, width, 0.2]
+    rect_histy = [left + width + spacing, bottom, 0.2, height]
+    
+    # start with a square Figure
+    fig = plt.figure(figsize=(8, 8))
+    
+    ax = fig.add_axes(rect_scatter)
+    ax_histx = fig.add_axes(rect_histx, sharex=ax)
+    ax_histy = fig.add_axes(rect_histy, sharey=ax)
+    
+    # use the previously defined function
+    scatter_hist(hist_1, hist_2, ax, ax_histx, ax_histy)
+    plt.show()
     
     
 def viz_regions(nb_image, regions, nrow):
@@ -1216,7 +1291,7 @@ def viz_regions(nb_image, regions, nrow):
     plt.show()
 
 
-def get_n_first_regions_index(best, worst, n, activation, nb_filter, regions, labels):
+def get_n_first_regions_index(best, worst, n, activation, nb_filter, regions):
     """
   select only regions that we want with associated label
   """
