@@ -29,24 +29,31 @@ The MNIST database of handwritten digits, available from this [link](http://yann
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1zW0K7yNF0JIMRs7DUIGazZqNU5IkSppw)
 
-
 ## Results on MNIST:
+
+### First mixt architecture: 
+
+CNN with two binary convolutionel layer and two no binary convolutional layer then concatenate the both.
+
 ### Loss/ACC: with 10 epochs.
 |               Models: 2 conv layers (29k parameters)              	|      Loss      	|  Accuracy (%)  	|
 |:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| No binary models                                                  	|     **0.0341**     	|      **98.79**     	|
+| No binary model                                                  	|     **0.05**     	|      **98.48**     	|
 |:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| Stochastic binary model in the first conv layer with ST           	|     0.0539     	|      98.29     	|
-| Stochastic binary model in the last conv layer with ST            	|     **0.0534**     	|      **98.31**     	|
-| Stochastic binary model in the both conv layer with ST            	|     0.0710     	|      97.54     	|
-| Stochastic binary model in the first conv layer with REINFORCE    	|     0.0749     	|      97.56     	|
+| Mixt model                                                  	|     **0.06**     	|      **98.19**     	|
+
+|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
+| Stochastic binary model in the first conv layer with ST           	|     **0.04**     	|      **97.51**     	|
+| Stochastic binary model in the last conv layer with ST            	|     0.0534     	|      97.31     	|
+| Stochastic binary model in the both conv layer with ST            	|     0.0710     	|      96.54     	|
+| Stochastic binary model in the first conv layer with REINFORCE    	|     0.0749     	|      96.56     	|
 | Stochastic binary model in the last conv layer with REINFORCE     	|     1.2811     	|      88.95     	|
 | Stochastic binary model in the both conv layer with REINFORCE     	|     3.2085     	|      80.68     	|
 |:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| Deterministic binary model in the first conv layer with ST        	|     **0.03912**    	|      **98.65**     	|
-| Deterministic binary model in the last conv layer with ST         	|     0.0743     	|      97.81     	|
-| Deterministic binary model in the both conv layer with ST         	|     0.0745     	|      97.57     	|
-| Deterministic binary model in the first conv layer with REINFORCE 	|     0.0684     	|      97.76     	|
+| Deterministic binary model in the first conv layer with ST        	|     **0.03912**    	|      **97.45**     	|
+| Deterministic binary model in the last conv layer with ST         	|     0.0743     	|      96.81     	|
+| Deterministic binary model in the both conv layer with ST         	|     0.0745     	|      96.57     	|
+| Deterministic binary model in the first conv layer with REINFORCE 	|     0.0684     	|      96.76     	|
 | Deterministic binary model in the last conv layer with REINFORCE  	|     0.5569     	|      95.42     	|
 | Deterministic binary model in the both conv layer with REINFORCE  	|     0.8538     	|      93.40     	|
 
