@@ -17,28 +17,72 @@ momentum = 0.9
 log_interval = 10  # how many batches to wait before logging training status
 criterion = F.nll_loss
 
-# parameters model to load no Binary model
+# parameters model to load no Binary model with stride
 binary = False
-model_no_binary, name_model = get_my_model_Omniglot(binary)
+maxpooling = False
+model, name_model = get_my_model_Omniglot(binary, maxpooling=maxpooling)
 print(name_model)
 
-path_model_checkpoint_no_binary = 'trained_models/Omniglot_classif/No_binary_models/'
-path_save_plot_no_binary = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
+path_model_checkpoint = 'trained_models/Omniglot_classif/No_binary_models/stride/'
+path_save_plot = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
 
-print('Begin running No Binary model')
-run(model_no_binary, path_model_checkpoint_no_binary, path_save_plot_no_binary, name_model, train_loader, valid_loader,
-    epochs, lr, momentum, criterion, log_interval)
-print('End running No Binary model')
+run(model, path_model_checkpoint, path_save_plot, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)
 
-# parameters model to load no Binary model
+# parameters model to load no Binary model with maxpooling
+binary = False
+maxpooling = True
+model, name_model = get_my_model_Omniglot(binary, maxpooling=maxpooling)
+print(name_model)
+
+path_model_checkpoint = 'trained_models/Omniglot_classif/No_binary_models/maxpooling/'
+path_save_plot = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
+
+run(model, path_model_checkpoint, path_save_plot, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)
+
+# parameters model to load Binary model stride
 binary = True
-model_binary, name_model = get_my_model_Omniglot(binary)
+maxpooling = False
+model, name_model = get_my_model_Omniglot(binary, maxpooling=maxpooling)
 print(name_model)
 
-path_model_checkpoint_binary = 'trained_models/Omniglot_classif/Binary_models/'
-path_save_plot_binary = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
+path_model_checkpoint = 'trained_models/Omniglot_classif/Binary_models/stride/'
+path_save_plot = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
 
-print('Begin running Binary model')
-run(model_binary, path_model_checkpoint_binary, path_save_plot_binary, name_model, train_loader, valid_loader, epochs,
-    lr, momentum, criterion, log_interval)
-print('End running Binary model')
+run(model, path_model_checkpoint, path_save_plot, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)
+
+# parameters model to load Binary model maxpooling
+binary = True
+maxpooling = True
+model, name_model = get_my_model_Omniglot(binary, maxpooling=maxpooling)
+print(name_model)
+
+path_model_checkpoint = 'trained_models/Omniglot_classif/Binary_models/maxpooling/'
+path_save_plot = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
+
+run(model, path_model_checkpoint, path_save_plot, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)
+
+# parameters model to load mixt model stride
+binary = False
+maxpooling = False
+mixt=True
+
+model, name_model = get_my_model_Omniglot(binary, maxpooling=maxpooling, mixt=mixt)
+print(name_model)
+
+path_model_checkpoint = 'trained_models/Omniglot_classif/Mixt_models/stride/'
+path_save_plot = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
+
+run(model, path_model_checkpoint, path_save_plot, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)
+
+# parameters model to load mixt model maxpooling
+binary = False
+maxpooling = True
+mixt=True
+
+model, name_model = get_my_model_Omniglot(binary, maxpooling=maxpooling, mixt=mixt)
+print(name_model)
+
+path_model_checkpoint = 'trained_models/Omniglot_classif/Mixt_models/maxpooling/'
+path_save_plot = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
+
+run(model, path_model_checkpoint, path_save_plot, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)
