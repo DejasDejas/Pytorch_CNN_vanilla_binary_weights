@@ -94,7 +94,7 @@ def get_my_model_MNIST(binary, maxpooling=True, mixt=False, bias=True, stochasti
     return model, names_model
 
 
-def get_my_model_Omniglot(binary, stochastic=True, reinforce=False, first_conv_layer=True, second_conv_layer=False,
+def get_my_model_Omniglot(binary, maxpooling=True, mixt=False, stochastic=True, reinforce=False, first_conv_layer=True, second_conv_layer=False,
                           third_conv_layer=False, fourth_conv_layer=False):
     """
     build Omniglot model
@@ -128,11 +128,32 @@ def get_my_model_Omniglot(binary, stochastic=True, reinforce=False, first_conv_l
             names_model += '_third_conv_binary'
         if fourth_conv_layer:
             names_model += '_fourth_conv_binary'
-        model = BinaryNetOmniglotClassification(first_conv_layer=first_conv_layer, second_conv_layer=second_conv_layer,
+        if maxpooling:
+            names_model += '_maxpooling'
+        model = BinaryNetOmniglotClassification(maxpooling, first_conv_layer=first_conv_layer, second_conv_layer=second_conv_layer,
                                                 third_conv_layer=third_conv_layer, fourth_conv_layer=fourth_conv_layer,
                                                 mode=mode, estimator=estimator)
+                                                
+    elif mixt:
+        if stochastic:
+            mode = 'Stochastic'
+            names_model = 'MNIST_Stochastic'
+        else:
+            mode = 'Deterministic'
+            names_model = 'MNIST_Deterministic'
+        if reinforce:
+            estimator = 'REINFORCE'
+            names_model += '_REINFORCE'
+        else:
+            estimator = 'ST'
+            names_model += '_ST'
+        if maxpooling:
+            names_model += '_maxpooling'
+        names_model += '_mixt'
+        model = MixtNetOmniglotClassification(maxpooling, mode=mode, estimator=estimator)
+        
     else:
-        model = NoBinaryNetOmniglotClassification()
+        model = NoBinaryNetOmniglotClassification(maxpooling)
         names_model = 'Omniglot_classif_NonBinaryNet'
         mode = None
         estimator = None
@@ -215,22 +236,17 @@ class MixtNetMNIST(Net):
             self.layer2_binary = nn.Conv2d(5, 10, kernel_size=3, padding=1, stride=2)
             
         self.batchnorm1_no_binary = nn.BatchNorm2d(5)
-        self.act_layer1_no_binary = nn.ReLU()
-        
         self.batchnorm1_binary = nn.BatchNorm2d(5)
-        if self.mode == 'Deterministic':
-            self.act_layer1_binary = DeterministicBinaryActivation(estimator=estimator)
-        elif self.mode == 'Stochastic':
-            self.act_layer1_binary = StochasticBinaryActivation(estimator=estimator)
-                
-        
         self.batchnorm2_no_binary = nn.BatchNorm2d(10)
+        self.batchnorm2_binary = nn.BatchNorm2d(10)
+        self.act_layer1_no_binary = nn.ReLU()
         self.act_layer2_no_binary = nn.ReLU()
         
-        self.batchnorm2_binary = nn.BatchNorm2d(10)
         if self.mode == 'Deterministic':
+            self.act_layer1_binary = DeterministicBinaryActivation(estimator=estimator)
             self.act_layer2_binary = DeterministicBinaryActivation(estimator=estimator)
         elif self.mode == 'Stochastic':
+            self.act_layer1_binary = StochasticBinaryActivation(estimator=estimator)
             self.act_layer2_binary = StochasticBinaryActivation(estimator=estimator)
             
         self.fc = nn.Linear(7*7*10*2, 10)
@@ -244,8 +260,8 @@ class MixtNetMNIST(Net):
             x_layer1_binary = self.act_layer1_binary(((self.maxpool1_binary(self.batchnorm1_binary(self.layer1_binary(x)))), slope))
             x_layer2_binary = self.act_layer2_binary(((self.maxpool2_binary(self.batchnorm2_binary(self.layer2_binary(x_layer1_binary)))), slope))
             # For no binary: 
-            x_layer1_no_binary = self.act_layer1_no_binary(self.maxpool1_binary(self.batchnorm1_no_binary(self.layer1_no_binary(x) * slope)))
-            x_layer2_no_binary = self.act_layer2_no_binary(self.maxpool2_binary(self.batchnorm2_no_binary(self.layer2_no_binary(x_layer1_no_binary) * slope)))
+            x_layer1_no_binary = self.act_layer1_no_binary(self.maxpool1_no_binary(self.batchnorm1_no_binary(self.layer1_no_binary(x) * slope)))
+            x_layer2_no_binary = self.act_layer2_no_binary(self.maxpool2_no_binary(self.batchnorm2_no_binary(self.layer2_no_binary(x_layer1_no_binary) * slope)))
             
         else:
             # For binary: 
@@ -335,33 +351,38 @@ class BinaryNetMNIST(Net):
 
 
 class NoBinaryNetOmniglotClassification(Net):
-    def __init__(self):
+    def __init__(self, maxpooling):
         super(NoBinaryNetOmniglotClassification, self).__init__()
 
-        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, stride=2)
+        self.maxpooling = maxpooling
+        
+        if self.maxpooling:
+            self.stride = 1
+            self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.maxPool2 = nn.MaxPool2d(kernel_size=2, stride=2)    
+            self.maxPool3 = nn.MaxPool2d(kernel_size=2, stride=2)  
+            self.maxPool4 = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.maxPool5 = nn.MaxPool2d(kernel_size=2, stride=2)
+        else:
+            self.stride = 2
+            
+        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, stride=self.stride)
+        self.layer2 = nn.Conv2d(64, 128, kernel_size=3, padding=1, stride=self.stride)
+        self.layer3 = nn.Conv2d(128, 256, kernel_size=3, padding=1, stride=self.stride)
+        self.layer4 = nn.Conv2d(256, 512, kernel_size=3, padding=1, stride=self.stride)
+        self.layer5 = nn.Conv2d(512, 512, kernel_size=3, padding=1, stride=self.stride)
+            
         self.batchNorm1 = nn.BatchNorm2d(64)
-        # self.dropout1 = nn.Dropout(0.5) #50 % probability 
-        # self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer1 = nn.ReLU()
-        self.layer2 = nn.Conv2d(64, 128, kernel_size=3, padding=1, stride=2)
         self.batchNorm2 = nn.BatchNorm2d(128)
-        # self.dropout2 = nn.Dropout(0.5)
-        #self.maxPool2 = nn.MaxPool2d(kernel_size=2, stride=2)            
         self.act_layer2 = nn.ReLU()
-        self.layer3 = nn.Conv2d(128, 256, kernel_size=3, padding=1, stride=2)
         self.batchNorm3 = nn.BatchNorm2d(256)
-        # self.dropout3 = nn.Dropout(0.5)
-        #self.maxPool3 = nn.MaxPool2d(kernel_size=2, stride=2)  
         self.act_layer3 = nn.ReLU()
-        self.layer4 = nn.Conv2d(256, 512, kernel_size=3, padding=1, stride=2)
         self.batchNorm4 = nn.BatchNorm2d(512)
-        # self.dropout4 = nn.Dropout(0.5)
-        #self.maxPool4 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer4 = nn.ReLU()
-        self.layer5 = nn.Conv2d(512, 512, kernel_size=3, padding=1, stride=2)
         self.batchNorm5 = nn.BatchNorm2d(512)
-        #self.maxPool5 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer5 = nn.ReLU()
+        
         self.fc1 = nn.Linear(4 * 4 * 512, 4096)
         self.act_fc1 = nn.ReLU()
         self.dropout1 = nn.Dropout(0.5)
@@ -370,17 +391,20 @@ class NoBinaryNetOmniglotClassification(Net):
     def forward(self, input):
         x = input
         slope = 1.0
-        """maxPool1 
-        x_layer1 = self.act_layer1(self.maxPool1(self.batchNorm1(self.layer1(x) * slope)))
-        x_layer2 = self.act_layer2(self.maxPool2(self.batchNorm2(self.layer2(x_layer1))))
-        x_layer3 = self.act_layer3(self.maxPool3(self.batchNorm3(self.layer3(x_layer2))))
-        x_layer4 = self.act_layer4(self.maxPool4(self.batchNorm4(self.layer4(x_layer3))))
-        """
-        x_layer1 = self.act_layer1(self.batchNorm1(self.layer1(x) * slope))
-        x_layer2 = self.act_layer2(self.batchNorm2(self.layer2(x_layer1)))
-        x_layer3 = self.act_layer3(self.batchNorm3(self.layer3(x_layer2)))
-        x_layer4 = self.act_layer4(self.batchNorm4(self.layer4(x_layer3)))
-        x_layer5 = self.act_layer5(self.batchNorm5(self.layer5(x_layer4)))
+        
+        if self.maxpooling:
+            x_layer1 = self.act_layer1(self.maxPool1(self.batchNorm1(self.layer1(x) * slope)))
+            x_layer2 = self.act_layer2(self.maxPool2(self.batchNorm2(self.layer2(x_layer1))))
+            x_layer3 = self.act_layer3(self.maxPool3(self.batchNorm3(self.layer3(x_layer2))))
+            x_layer4 = self.act_layer4(self.maxPool4(self.batchNorm4(self.layer4(x_layer3))))
+            x_layer5 = self.act_layer5(self.maxPool5(self.batchNorm5(self.layer5(x_layer4))))
+        else:
+            x_layer1 = self.act_layer1(self.batchNorm1(self.layer1(x) * slope))
+            x_layer2 = self.act_layer2(self.batchNorm2(self.layer2(x_layer1)))
+            x_layer3 = self.act_layer3(self.batchNorm3(self.layer3(x_layer2)))
+            x_layer4 = self.act_layer4(self.batchNorm4(self.layer4(x_layer3)))
+            x_layer5 = self.act_layer5(self.batchNorm5(self.layer5(x_layer4)))
+            
         x_layer5 = x_layer5.view(x_layer5.size(0), -1)
         x_fc1 = self.dropout1(self.act_fc1(self.fc1(x_layer5)))
         x_fc2 = self.fc2(x_fc1)
@@ -390,15 +414,14 @@ class NoBinaryNetOmniglotClassification(Net):
 
 class BinaryNetOmniglotClassification(Net):
 
-    def __init__(self, first_conv_layer, second_conv_layer, third_conv_layer, fourth_conv_layer, mode='Deterministic',
+    def __init__(self, maxpooling, first_conv_layer, second_conv_layer, third_conv_layer, fourth_conv_layer, mode='Deterministic',
                  estimator='ST'):
         super(BinaryNetOmniglotClassification, self).__init__()
 
         assert mode in ['Deterministic', 'Stochastic']
         assert estimator in ['ST', 'REINFORCE']
-        # if mode == 'Deterministic':
-        #    assert estimator == 'ST'
 
+        self.maxpooling = maxpooling
         self.mode = mode
         self.estimator = estimator
         self.first_conv_layer = first_conv_layer
@@ -406,10 +429,28 @@ class BinaryNetOmniglotClassification(Net):
         self.third_conv_layer = third_conv_layer
         self.fourth_conv_layer = fourth_conv_layer
 
-        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, stride=2)
+        if self.maxpooling:
+            self.stride = 1
+            self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.maxPool2 = nn.MaxPool2d(kernel_size=2, stride=2)    
+            self.maxPool3 = nn.MaxPool2d(kernel_size=2, stride=2)  
+            self.maxPool4 = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.maxPool5 = nn.MaxPool2d(kernel_size=2, stride=2)
+        else:
+            self.stride = 2
+            
+        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, stride=self.stride)
+        self.layer2 = nn.Conv2d(64, 128, kernel_size=3, padding=1, stride=self.stride)
+        self.layer3 = nn.Conv2d(128, 256, kernel_size=3, padding=1, stride=self.stride)
+        self.layer4 = nn.Conv2d(256, 512, kernel_size=3, padding=1, stride=self.stride)
+        self.layer5 = nn.Conv2d(512, 512, kernel_size=3, padding=1, stride=self.stride)
+            
         self.batchNorm1 = nn.BatchNorm2d(64)
-        # self.dropout1 = nn.Dropout(0.5)
-        #self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.batchNorm2 = nn.BatchNorm2d(128)
+        self.batchNorm3 = nn.BatchNorm2d(256)
+        self.batchNorm4 = nn.BatchNorm2d(512)
+        self.batchNorm5 = nn.BatchNorm2d(512)     
+        
         if self.first_conv_layer:
             if self.mode == 'Deterministic':
                 self.act_layer1 = DeterministicBinaryActivation(estimator=estimator)
@@ -417,10 +458,7 @@ class BinaryNetOmniglotClassification(Net):
                 self.act_layer1 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer1 = nn.ReLU()
-        self.layer2 = nn.Conv2d(64, 128, kernel_size=3, padding=1, stride=2)
-        self.batchNorm2 = nn.BatchNorm2d(128)
-        # self.dropout2 = nn.Dropout(0.5)
-        #self.maxPool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+            
         if self.second_conv_layer:
             if self.mode == 'Deterministic':
                 self.act_layer2 = DeterministicBinaryActivation(estimator=estimator)
@@ -428,10 +466,7 @@ class BinaryNetOmniglotClassification(Net):
                 self.act_layer2 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer2 = nn.ReLU()
-        self.layer3 = nn.Conv2d(128, 256, kernel_size=3, padding=1, stride=2)
-        self.batchNorm3 = nn.BatchNorm2d(256)
-        # self.dropout3 = nn.Dropout(0.5)
-        #self.maxPool3 = nn.MaxPool2d(kernel_size=2, stride=2)
+            
         if self.third_conv_layer:
             if self.mode == 'Deterministic':
                 self.act_layer3 = DeterministicBinaryActivation(estimator=estimator)
@@ -439,10 +474,7 @@ class BinaryNetOmniglotClassification(Net):
                 self.act_layer3 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer3 = nn.ReLU()
-        self.layer4 = nn.Conv2d(256, 512, kernel_size=3, padding=1, stride=2)
-        self.batchNorm4 = nn.BatchNorm2d(512)
-        # self.dropout4 = nn.Dropout(0.5)
-        #self.maxPool4 = nn.MaxPool2d(kernel_size=2, stride=2)   
+            
         if self.fourth_conv_layer:
             if self.mode == 'Deterministic':
                 self.act_layer4 = DeterministicBinaryActivation(estimator=estimator)
@@ -450,10 +482,9 @@ class BinaryNetOmniglotClassification(Net):
                 self.act_layer4 = StochasticBinaryActivation(estimator=estimator)
         else:
             self.act_layer4 = nn.ReLU()
-        self.layer5 = nn.Conv2d(512, 512, kernel_size=3, padding=1, stride=2)
-        self.batchNorm5 = nn.BatchNorm2d(512)        
-        #self.maxPool5 = nn.MaxPool2d(kernel_size=2, stride=2) 
+            
         self.act_layer5 = nn.ReLU()
+        
         self.fc1 = nn.Linear(4 * 4 * 512, 4096)
         self.act_fc1 = nn.ReLU()
         self.dropout1 = nn.Dropout(0.5)
@@ -463,43 +494,163 @@ class BinaryNetOmniglotClassification(Net):
     def forward(self, input):
         x = input
         slope = 1.0
-        """    
-        if self.first_conv_layer:
-            x_layer1 = self.act_layer1(((self.maxPool1(self.batchNorm1(self.layer1(x)))), slope))
+        
+        if self.maxpooling:
+            if self.first_conv_layer:
+                x_layer1 = self.act_layer1(((self.maxPool1(self.batchNorm1(self.layer1(x)))), slope))
+            else:
+                x_layer1 = self.act_layer1(self.maxPool1(self.batchNorm1(self.layer1(x) * slope)))
+            if self.second_conv_layer:
+                x_layer2 = self.act_layer2(((self.maxPool2(self.batchNorm2(self.layer2(x_layer1)))), slope))
+            else:
+                x_layer2 = self.act_layer2(self.maxPool2(self.batchNorm2(self.layer2(x_layer1) * slope)))
+            if self.third_conv_layer:
+                x_layer3 = self.act_layer3(((self.maxPool3(self.batchNorm3(self.layer3(x_layer2)))), slope))
+            else:
+                x_layer3 = self.act_layer3(self.maxPool3(self.batchNorm3(self.layer3(x_layer2) * slope)))
+            if self.fourth_conv_layer:
+                x_layer4 = self.act_layer4(((self.maxPool4(self.batchNorm4(self.layer4(x_layer3)))), slope))
+            else:
+                x_layer4 = self.act_layer4(self.maxPool4(self.batchNorm4(self.layer4(x_layer3) * slope)))
+            x_layer5 = self.act_layer5(self.maxPool5(self.batchNorm5(self.layer5(x_layer4) * slope)))
+            
         else:
-            x_layer1 = self.act_layer1(self.maxPool1(self.batchNorm1(self.layer1(x) * slope)))
-        if self.second_conv_layer:
-            x_layer2 = self.act_layer2(((self.maxPool2(self.batchNorm2(self.layer2(x_layer1)))), slope))
-        else:
-            x_layer2 = self.act_layer2(self.maxPool2(self.batchNorm2(self.layer2(x_layer1) * slope)))
-        if self.third_conv_layer:
-            x_layer3 = self.act_layer3(((self.maxPool3(self.batchNorm3(self.layer3(x_layer2)))), slope))
-        else:
-            x_layer3 = self.act_layer3(self.maxPool3(self.batchNorm3(self.layer3(x_layer2) * slope)))
-        if self.fourth_conv_layer:
-            x_layer4 = self.act_layer4(((self.maxPool4(self.batchNorm4(self.layer4(x_layer3)))), slope))
-        else:
-            x_layer4 = self.act_layer4(self.maxPool4(self.batchNorm4(self.layer4(x_layer3) * slope)))
-        """
-        if self.first_conv_layer:
-            x_layer1 = self.act_layer1(((self.batchNorm1(self.layer1(x))), slope))
-        else:
-            x_layer1 = self.act_layer1(self.batchNorm1(self.layer1(x) * slope))
-        if self.second_conv_layer:
-            x_layer2 = self.act_layer2(((self.batchNorm2(self.layer2(x_layer1))), slope))
-        else:
-            x_layer2 = self.act_layer2(self.batchNorm2(self.layer2(x_layer1) * slope))
-        if self.third_conv_layer:
-            x_layer3 = self.act_layer3(((self.batchNorm3(self.layer3(x_layer2))), slope))
-        else:
-            x_layer3 = self.act_layer3(self.batchNorm3(self.layer3(x_layer2) * slope))
-        if self.fourth_conv_layer:
-            x_layer4 = self.act_layer4(((self.batchNorm4(self.layer4(x_layer3))), slope))
-        else:
-            x_layer4 = self.act_layer4(self.batchNorm4(self.layer4(x_layer3) * slope)) 
-        x_layer5 = self.act_layer5(self.batchNorm5(self.layer5(x_layer4)))
+            if self.first_conv_layer:
+                x_layer1 = self.act_layer1(((self.batchNorm1(self.layer1(x))), slope))
+            else:
+                x_layer1 = self.act_layer1(self.batchNorm1(self.layer1(x) * slope))
+            if self.second_conv_layer:
+                x_layer2 = self.act_layer2(((self.batchNorm2(self.layer2(x_layer1))), slope))
+            else:
+                x_layer2 = self.act_layer2(self.batchNorm2(self.layer2(x_layer1) * slope))
+            if self.third_conv_layer:
+                x_layer3 = self.act_layer3(((self.batchNorm3(self.layer3(x_layer2))), slope))
+            else:
+                x_layer3 = self.act_layer3(self.batchNorm3(self.layer3(x_layer2) * slope))
+            if self.fourth_conv_layer:
+                x_layer4 = self.act_layer4(((self.batchNorm4(self.layer4(x_layer3))), slope))
+            else:
+                x_layer4 = self.act_layer4(self.batchNorm4(self.layer4(x_layer3) * slope)) 
+            x_layer5 = self.act_layer5(self.batchNorm5(self.layer5(x_layer4) * slope))
+            
         x_layer5 = x_layer5.view(x_layer5.size(0), -1)
         x_fc1 = self.dropout1(self.act_fc1(self.fc1(x_layer5)))
+        x_fc2 = self.fc2(x_fc1)
+        x_out = F.log_softmax(x_fc2, dim=1)
+        return x_out
+        
+
+
+class MixtNetOmniglotClassification(Net):
+
+    def __init__(self, maxpooling, mode='Deterministic', estimator='ST'):
+        super(MixtNetOmniglotClassification, self).__init__()
+
+        assert mode in ['Deterministic', 'Stochastic']
+        assert estimator in ['ST', 'REINFORCE']
+
+        self.maxpooling = maxpooling
+        self.mode = mode
+        self.estimator = estimator
+
+        if self.maxpooling:
+            self.stride = 1
+            self.maxPool1_no_binary = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.maxPool2_no_binary = nn.MaxPool2d(kernel_size=2, stride=2)    
+            self.maxPool3_no_binary = nn.MaxPool2d(kernel_size=2, stride=2)  
+            self.maxPool4_no_binary = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.maxPool5_no_binary = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.maxPool1_binary = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.maxPool2_binary = nn.MaxPool2d(kernel_size=2, stride=2)    
+            self.maxPool3_binary = nn.MaxPool2d(kernel_size=2, stride=2)  
+            self.maxPool4_binary = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.maxPool5_binary = nn.MaxPool2d(kernel_size=2, stride=2)
+        else:
+            self.stride = 2
+            
+        self.layer1_no_binary = nn.Conv2d(1, 32, kernel_size=3, padding=1, stride=self.stride)
+        self.layer2_no_binary = nn.Conv2d(32, 64, kernel_size=3, padding=1, stride=self.stride)
+        self.layer3_no_binary = nn.Conv2d(64, 128, kernel_size=3, padding=1, stride=self.stride)
+        self.layer4_no_binary = nn.Conv2d(128, 256, kernel_size=3, padding=1, stride=self.stride)
+        self.layer5_no_binary = nn.Conv2d(256, 256, kernel_size=3, padding=1, stride=self.stride)
+        self.layer1_binary = nn.Conv2d(1, 32, kernel_size=3, padding=1, stride=self.stride)
+        self.layer2_binary = nn.Conv2d(32, 64, kernel_size=3, padding=1, stride=self.stride)
+        self.layer3_binary = nn.Conv2d(64, 128, kernel_size=3, padding=1, stride=self.stride)
+        self.layer4_binary = nn.Conv2d(128, 256, kernel_size=3, padding=1, stride=self.stride)
+        self.layer5_binary = nn.Conv2d(256, 256, kernel_size=3, padding=1, stride=self.stride)
+            
+        self.batchNorm1_no_binary = nn.BatchNorm2d(32)
+        self.batchNorm2_no_binary = nn.BatchNorm2d(64)
+        self.batchNorm3_no_binary = nn.BatchNorm2d(128)
+        self.batchNorm4_no_binary = nn.BatchNorm2d(256) 
+        self.batchNorm5_no_binary = nn.BatchNorm2d(256) 
+        self.batchNorm1_binary = nn.BatchNorm2d(32)
+        self.batchNorm2_binary = nn.BatchNorm2d(64)
+        self.batchNorm3_binary = nn.BatchNorm2d(128)
+        self.batchNorm4_binary = nn.BatchNorm2d(256)  
+        self.batchNorm5_binary = nn.BatchNorm2d(256)  
+        
+        self.act_layer1_no_binary = nn.ReLU()
+        self.act_layer2_no_binary = nn.ReLU()
+        self.act_layer3_no_binary = nn.ReLU()
+        self.act_layer4_no_binary = nn.ReLU()
+        self.act_layer5_no_binary = nn.ReLU()
+        
+        if self.mode == 'Deterministic':
+            self.act_layer1 = DeterministicBinaryActivation(estimator=estimator)
+            self.act_layer2 = DeterministicBinaryActivation(estimator=estimator)
+            self.act_layer3 = DeterministicBinaryActivation(estimator=estimator)
+            self.act_layer4 = DeterministicBinaryActivation(estimator=estimator)
+            self.act_layer5 = DeterministicBinaryActivation(estimator=estimator)
+        elif self.mode == 'Stochastic':
+            self.act_layer1_binary = StochasticBinaryActivation(estimator=estimator)
+            self.act_layer2_binary = StochasticBinaryActivation(estimator=estimator)
+            self.act_layer3_binary = StochasticBinaryActivation(estimator=estimator)
+            self.act_layer4_binary = StochasticBinaryActivation(estimator=estimator)
+            self.act_layer5_binary = StochasticBinaryActivation(estimator=estimator)
+
+        self.fc1 = nn.Linear(4*4*256*2, 4096)
+        self.act_fc1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(0.5)
+        self.fc2 = nn.Linear(4096, 1623)
+
+
+    def forward(self, input):
+        x = input
+        slope = 1.0
+        
+        if self.maxpooling:
+            # For binary: 
+            x_layer1_binary = self.act_layer1_binary(((self.maxpool1_binary(self.batchnorm1_binary(self.layer1_binary(x)))), slope))
+            x_layer2_binary = self.act_layer2_binary(((self.maxpool2_binary(self.batchnorm2_binary(self.layer2_binary(x_layer1_binary)))), slope))
+            x_layer3_binary = self.act_layer3_binary(((self.maxpool3_binary(self.batchnorm3_binary(self.layer3_binary(x_layer2_binary)))), slope))
+            x_layer4_binary = self.act_layer4_binary(((self.maxpool4_binary(self.batchnorm4_binary(self.layer4_binary(x_layer3_binary)))), slope))
+            x_layer5_binary = self.act_layer5_binary(((self.maxpool5_binary(self.batchnorm5_binary(self.layer5_binary(x_layer4_binary)))), slope))
+            # For No binary: 
+            x_layer1_no_binary = self.act_layer1_no_binary(self.maxpool1_no_binary(self.batchnorm1_no_binary(self.layer1_no_binary(x) * slope)))
+            x_layer2_no_binary = self.act_layer2_no_binary(self.maxpool2_no_binary(self.batchnorm2_no_binary(self.layer2_no_binary(x_layer1_no_binary) * slope)))
+            x_layer3_no_binary = self.act_layer3_no_binary(self.maxpool3_no_binary(self.batchnorm3_no_binary(self.layer3_no_binary(x_layer2_no_binary) * slope)))
+            x_layer4_no_binary = self.act_layer4_no_binary(self.maxpool4_no_binary(self.batchnorm4_no_binary(self.layer4_no_binary(x_layer3_no_binary) * slope)))
+            x_layer5_no_binary = self.act_layer5_no_binary(self.maxpool5_no_binary(self.batchnorm5_no_binary(self.layer5_no_binary(x_layer4_no_binary) * slope)))
+                        
+        else:
+            # For binary: 
+            x_layer1_binary = self.act_layer1_binary(((self.batchnorm1_binary(self.layer1_binary(x))), slope))
+            x_layer2_binary = self.act_layer2_binary(((self.batchnorm2_binary(self.layer2_binary(x_layer1_binary))), slope))
+            x_layer3_binary = self.act_layer3_binary(((self.batchnorm3_binary(self.layer3_binary(x_layer2_binary))), slope))
+            x_layer4_binary = self.act_layer4_binary(((self.batchnorm4_binary(self.layer4_binary(x_layer3_binary))), slope))
+            x_layer5_binary = self.act_layer5_binary(((self.batchnorm5_binary(self.layer5_binary(x_layer4_binary))), slope))
+            # For no binary:
+            x_layer1_no_binary = self.act_layer1_no_binary(self.batchnorm1_no_binary(self.layer1_no_binary(x) * slope))
+            x_layer2_no_binary = self.act_layer2_no_binary(self.batchnorm2_no_binary(self.layer2_no_binary(x_layer1_no_binary) * slope))
+            x_layer3_no_binary = self.act_layer3_no_binary(self.batchnorm3_no_binary(self.layer3_no_binary(x_layer2_no_binary) * slope))
+            x_layer4_no_binary = self.act_layer4_no_binary(self.batchnorm4_no_binary(self.layer4_no_binary(x_layer3_no_binary) * slope))
+            x_layer5_no_binary = self.act_layer5_no_binary(self.batchnorm5_no_binary(self.layer5_no_binary(x_layer4_no_binary) * slope))
+        
+        x_layer5_binary = x_layer2_binary.view(x_layer5_binary.size(0), -1)
+        x_layer5_no_binary = x_layer2_no_binary.view(x_layer5_no_binary.size(0), -1)
+        x_concatenate = torch.cat((x_layer5_binary, x_layer5_no_binary), 1)
+        x_fc1 = self.dropout1(self.act_fc1(self.fc1(x_concatenate)))
         x_fc2 = self.fc2(x_fc1)
         x_out = F.log_softmax(x_fc2, dim=1)
         return x_out
