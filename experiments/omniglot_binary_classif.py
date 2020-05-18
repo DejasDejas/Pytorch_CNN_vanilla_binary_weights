@@ -85,4 +85,8 @@ print(name_model)
 path_model_checkpoint = 'trained_models/Omniglot_classif/Mixt_models/maxpooling/'
 path_save_plot = 'results/Omniglot_results/plot_acc_loss/Omniglot_classif/'
 
+<<<<<<< HEAD
 run(model, path_model_checkpoint, path_save_plot, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)
+=======
+run(model, path_model_checkpoint, path_save_plot, name_model, train_loader, valid_loader, epochs, lr, momentum, criterion, log_interval)
+>>>>>>> d798839d86ffc471c6d4f24a2bf4fad0e0b52036
