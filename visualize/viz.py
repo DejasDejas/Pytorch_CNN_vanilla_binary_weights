@@ -528,9 +528,11 @@ def visualize_model(model, dataloaders, device, num_images=6):
         model.train(mode=was_training)
 
 
-def visTensor(tensor, ch=0, allkernels=False, nrow=8, padding=1):
+def visTensor(tensor, ch=0, allkernels=False, nrow=8, padding=1, save=False, path_save=None):
     n, c, w, h = tensor.shape
 
+    if save:
+        assert path_save is not None, 'you must choice path if you want save figure'
     if allkernels:
         tensor = tensor.view(n * c, -1, w, h)
     elif c != 3:
@@ -539,7 +541,11 @@ def visTensor(tensor, ch=0, allkernels=False, nrow=8, padding=1):
     rows = np.min((tensor.shape[0] // nrow + 1, 64))
     grid = make_grid(tensor, nrow=nrow, normalize=True, padding=padding, pad_value=1)
     plt.figure(figsize=(nrow, rows))
+    fig = plt.gcf()
     plt.imshow(grid.numpy().transpose((1, 2, 0)))
+    if save:
+        fig.savefig(path_save, dpi=100)
+        print('image saved')
 
 
 def apply_transforms(image, size=224):
@@ -942,22 +948,22 @@ def get_all_regions_max(images, stride, activations, stride_size, padding, filte
     filter_layer4 = get_filter_layer4()
 
     for name, fm in activations.items():
-        if name == 'layer5':
+        if ('layer5' in name) or ('maxpool5' in name) or ('maxPool5' in name):
             break
         # for each image of fm
-        if ('layer1' in name) or ('maxpool1' in name):
+        if ('layer1' in name) or ('maxpool1' in name) or ('maxPool1' in name):
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 3, 3))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
             activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
-        if ('layer2'in name) or ('maxpool2' in name):
+        if ('layer2'in name) or ('maxpool2' in name) or ('maxPool2' in name):
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 7, 7))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
             activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
-        if name == 'layer3':
+        if ('layer3' in name) or ('maxpool3' in name) or ('maxPool3' in name):
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 15, 15))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
             activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
-        if name == 'layer4':
+        if ('layer4' in name) or ('maxpool4' in name) or ('maxPool4' in name):
             regions_layer = np.zeros((fm.shape[0], fm.shape[1], 31, 31))
             activation_layer = np.zeros((fm.shape[0], fm.shape[1]))
             activation_layer_normalized = np.zeros((fm.shape[0], fm.shape[1]))
@@ -965,23 +971,23 @@ def get_all_regions_max(images, stride, activations, stride_size, padding, filte
             print('treating image n {}/{}, for layer: {}'.format(j, fm.shape[0], name))
 
             im = images[j].unsqueeze(0).numpy().squeeze()  # image i of batch batch: numpy array: (28,28)
-            if ('layer1' in name) or ('maxpool1' in name):
+            if ('layer1' in name) or ('maxpool1' in name) or ('maxPool1' in name):
                 regions_im_j = np.zeros((fm.shape[1], 3, 3))  # initialise empty list of regions for batch
                 activation_im_j = np.zeros((fm.shape[1]))
                 activation_im_j_normalized = np.zeros((fm.shape[1]))
-            if ('layer2' in name) or ('maxpool2' in name):
+            if ('layer2' in name) or ('maxpool2' in name) or ('maxPool2' in name):
                 regions_im_j = np.zeros((fm.shape[1], 7, 7))
                 if stride:
                     regions_im_j = (regions_im_j * filter_layer2) / 4
                 activation_im_j = np.zeros((fm.shape[1]))
                 activation_im_j_normalized = np.zeros((fm.shape[1]))
-            if name == 'layer3':
+            if ('layer3' in name) or ('maxpool3' in name) or ('maxPool3' in name):
                 regions_im_j = np.zeros((fm.shape[1], 15, 15))
                 if stride:
                     regions_im_j = (regions_im_j * filter_layer3) / 4
                 activation_im_j = np.zeros((fm.shape[1]))
                 activation_im_j_normalized = np.zeros((fm.shape[1]))
-            if name == 'layer4':
+            if ('layer4' in name) or ('maxpool4' in name) or ('maxPool4' in name):
                 regions_im_j = np.zeros((fm.shape[1], 31, 31))
                 if stride:
                     regions_im_j = (regions_im_j * filter_layer4) / 4
@@ -993,13 +999,13 @@ def get_all_regions_max(images, stride, activations, stride_size, padding, filte
                 ind_x = int((np.where(fm[j][i] == act_max)[0])[0])  # get index (x,y) of act_max
                 ind_y = int((np.where(fm[j][i] == act_max)[1])[0])
 
-                if ('layer1' in name) or ('maxpool1' in name):
+                if ('layer1' in name) or ('maxpool1' in name) or ('maxPool1' in name):
                     region, begin_col, end_col, begin_raw, end_raw  = get_region_layer1(im, ind_x, ind_y, name, stride_size, padding, filter_size, len_img_h, len_img_w, return_all=True)
-                if ('layer2' in name) or ('maxpool2' in name):
+                if ('layer2' in name) or ('maxpool2' in name) or ('maxPool2' in name):
                     region = get_region_layer2(im, ind_x, ind_y, name, stride_size, padding, filter_size, len_img_h, len_img_w)
-                if name == 'layer3':
+                if ('layer3' in name) or ('maxpool3' in name) or ('maxPool3' in name):
                     region = get_region_layer3(im, ind_x, ind_y, name, stride_size, padding, filter_size, len_img_h, len_img_w)
-                if name == 'layer4':
+                if ('layer4' in name) or ('maxpool4' in name) or ('maxPool4' in name):
                     region = get_region_layer4(im, ind_x, ind_y, name, stride_size, padding, filter_size, len_img_h, len_img_w)
 
                 regions_im_j[i] = region
@@ -1026,14 +1032,17 @@ def get_all_regions_max(images, stride, activations, stride_size, padding, filte
 ######################################
 
 
-def get_regions_interest(regions, labels, activation, activations_normalized, details=False, best=True, worst=False, viz_mean_img=True, viz_grid=True, percentage=None, list_filter=None, nrow=8, plot_histogram=False, bins=20):
+def get_regions_interest(regions, labels, activation, activations_normalized, details=False, best=True, worst=False, viz_mean_img=True, viz_grid=True, percentage=None, list_filter=None, nrow=8, plot_histogram=False, save_mean_regions=False, path_save_mean_region=None, bins=20):
     """
   get regions of interest
   """
     nb_filter = activation.shape[1]
+    
+    if save_mean_regions:
+        assert path_save_mean_region is not None, 'you must choice path_save_mean_region if you want save mean regions'
 
     if best == False and worst == False:
-        assert percentage != None, "if don't choice best or worst value, you didn't choice a percentage value"
+        assert percentage is not None, "if don't choice best or worst value, you didn't choice a percentage value"
     if best == True and worst == True:
         raise TypeError('choice only one value at True between best an worst')
 
@@ -1124,11 +1133,21 @@ def get_regions_interest(regions, labels, activation, activations_normalized, de
                 to_visualize.append(mean_img)
                 to_visualize_normalized.append(mean_img_normalized)
             print('mean regions of {} regions who activate most filters:'.format(n))
-            viz_regions(len(to_visualize), to_visualize, 10)
+            if save_mean_regions:
+                path_save = path_save_mean_region + '.png'
+                viz_regions(len(to_visualize), to_visualize, nrow=nrow, save=True, path_save=path_save)
+            else:
+                viz_regions(len(to_visualize), to_visualize, 10)
             plt.show()
+
             print('With normalized activations:')
-            viz_regions(len(to_visualize_normalized), to_visualize_normalized, 10)
+            if save_mean_regions:
+                path_save = path_save_mean_region + '_normalized.png'
+                viz_regions(len(to_visualize_normalized), to_visualize_normalized, nrow=nrow, save=True, path_save=path_save)
+            else:
+                viz_regions(len(to_visualize_normalized), to_visualize_normalized, nrow=nrow)
             plt.show()
+
 
     if viz_grid:
         nb_image = nb_regions
@@ -1281,13 +1300,13 @@ def compare_two_histograms(hist_1, hist_2):
     plt.show()
     
     
-def viz_regions(nb_image, regions, nrow):
+def viz_regions(nb_image, regions, nrow, save=False, path_save=None):
     """
   visualize region of interest
   """
     regions = torch.tensor(regions)
     regions = regions.reshape((nb_image, 1, regions.shape[-2], regions.shape[-1]))
-    visTensor(regions, ch=0, allkernels=False, nrow=nrow)
+    visTensor(regions, ch=0, allkernels=False, nrow=nrow, save=save, path_save=path_save)
     plt.ioff()
     plt.show()
 

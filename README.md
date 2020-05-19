@@ -36,27 +36,16 @@ The MNIST database of handwritten digits, available from this [link](http://yann
 CNN with two binary convolutionel layer and two no binary convolutional layer then concatenate the both.
 
 ### Loss/ACC: with 10 epochs.
-|               Models: 2 conv layers (29k parameters)              	|      Loss      	|  Accuracy (%)  	|
-|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| No binary model                                                  	|     **0.05**     	|      **98.48**     	|
-|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| Mixt model                                                  	|     **0.06**     	|      **98.19**     	|
-
-|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| Stochastic binary model in the first conv layer with ST           	|     **0.04**     	|      **97.51**     	|
-| Stochastic binary model in the last conv layer with ST            	|     0.0534     	|      97.31     	|
-| Stochastic binary model in the both conv layer with ST            	|     0.0710     	|      96.54     	|
-| Stochastic binary model in the first conv layer with REINFORCE    	|     0.0749     	|      96.56     	|
-| Stochastic binary model in the last conv layer with REINFORCE     	|     1.2811     	|      88.95     	|
-| Stochastic binary model in the both conv layer with REINFORCE     	|     3.2085     	|      80.68     	|
-|:-----------------------------------------------------------------:	|:--------------:	|:--------------:	|
-| Deterministic binary model in the first conv layer with ST        	|     **0.03912**    	|      **97.45**     	|
-| Deterministic binary model in the last conv layer with ST         	|     0.0743     	|      96.81     	|
-| Deterministic binary model in the both conv layer with ST         	|     0.0745     	|      96.57     	|
-| Deterministic binary model in the first conv layer with REINFORCE 	|     0.0684     	|      96.76     	|
-| Deterministic binary model in the last conv layer with REINFORCE  	|     0.5569     	|      95.42     	|
-| Deterministic binary model in the both conv layer with REINFORCE  	|     0.8538     	|      93.40     	|
-
+|               Models: 2 conv layers (29k parameters)                  	|      Loss      	|  Accuracy (%)  	|
+|:---------------------------------------------------------------------:	|:--------------:	|:--------------:	|
+| No binary model with stride=2                                             |     **0.06**     	|      **98.07**    |
+| No binary model with maxpooling=2                                         |     0.04      	|      98.59        |
+|:---------------------------------------------------------------------:	|:--------------:	|:--------------:	|
+| Mixt model with stride=2                                                 	|     **0.08**     	|      **97.49**    |
+| Mixt model with maxpooling=2                                            	|     **0.05**     	|      **98.36**    |
+|:---------------------------------------------------------------------:	|:--------------:	|:--------------:	|
+| Stochastic binary model in the first conv layer with ST with stride=2     |     0.11       	|      96.71        |
+| Stochastic binary model in the first conv layer with ST with maxpooling=2 |     **0.08**     	|      **97.57**    |
 
 # PART2: Omniglot Classification with binary activations:
 
@@ -71,14 +60,17 @@ The Omniglot data set is designed for developing more human-like learning algori
 
 ## Results on Omniglot classification with data train (80% train, 10% validation and 10% test):
 ### Loss/ACC: with 10 epochs.
-|               Models: 4 conv layers          	     	|  Accuracy (%)  	|
-|:-----------------------------------------------------------------:	|:--------------:	|
-| No binary models                                                  	|      **94.97**   	|
-|:-----------------------------------------------------------------:	|:--------------:	|
-| Stochastic binary model in the first conv layer with ST           	|    **93.05**     	|
-| Stochastic binary model in the second conv layer with ST            	|      19.50    	|
-| Stochastic binary model in the third conv layer with ST                	|    15.66    	|
-| Stochastic binary model in the fourth conv layer with ST        	|    16.03  	|
+|               Models: 4 conv layers          	                         	|  Accuracy (%)  	|
+|:------------------------------------------------------------------------:	|:----------------:	|
+| No binary model with stride=2                                             |     94.81     	|
+| No binary model with maxpooling=2                                         |    **97.20**     	|
+|:------------------------------------------------------------------------:	|:----------------:	|
+| Mixt model with stride=2                                                 	|      93.62    	|
+| Mixt model with maxpooling=2                                            	|    **96.06**     	|
+|:------------------------------------------------------------------------:	|:----------------:	|
+| Stochastic binary model in the first conv layer with ST with stride=2     |      94.66.    	|
+| Stochastic binary model in the first conv layer with ST with maxpooling=2 |    **96.89**    	|
+
 
 
 # PART3: Omniglot Few Shot Learning with binary activations:
