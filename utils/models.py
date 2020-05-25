@@ -177,19 +177,21 @@ class NoBinaryNetMnist(Net):
         
         if self.maxpooling:
             self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1, bias=self.bias)
-            self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-            self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, bias=self.bias)
-            self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         else:
             self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1, stride=2, bias=self.bias)
-            self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2, bias=self.bias)
-            
         self.batchnorm1 = nn.BatchNorm2d(10)
-        self.act_layer1 = nn.ReLU()  # Hardsigmoid()
+        if self.maxpooling:
+            self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.act_layer1 = nn.ReLU()
+        if self.maxpooling:
+            self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, bias=self.bias)
+        else:
+            self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2, bias=self.bias)
         
         self.batchnorm2 = nn.BatchNorm2d(20)
-        self.act_layer2 = nn.ReLU()  # Hardsigmoid()
-        
+        if self.maxpooling:
+            self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.act_layer2 = nn.ReLU()
         self.fc = nn.Linear(7 * 7 * 20, 10)
 
     def forward(self, input):
@@ -220,35 +222,52 @@ class MixtNetMNIST(Net):
         self.mode = mode
         self.estimator = estimator
         
+        # conv1 no binary
         if self.maxpooling:
             self.layer1_no_binary = nn.Conv2d(1, 5, kernel_size=3, padding=1)
-            self.layer1_binary = nn.Conv2d(1, 5, kernel_size=3, padding=1)
-            self.layer2_no_binary = nn.Conv2d(5, 10, kernel_size=3, padding=1)
-            self.layer2_binary = nn.Conv2d(5, 10, kernel_size=3, padding=1)
-            self.maxpool1_no_binary = nn.MaxPool2d(kernel_size=2, stride=2)
-            self.maxpool2_no_binary = nn.MaxPool2d(kernel_size=2, stride=2)
-            self.maxpool1_binary = nn.MaxPool2d(kernel_size=2, stride=2)
-            self.maxpool2_binary = nn.MaxPool2d(kernel_size=2, stride=2)
         else:
             self.layer1_no_binary = nn.Conv2d(1, 5, kernel_size=3, padding=1, stride=2)
-            self.layer1_binary = nn.Conv2d(1, 5, kernel_size=3, padding=1, stride=2)
-            self.layer2_no_binary = nn.Conv2d(5, 10, kernel_size=3, padding=1, stride=2)
-            self.layer2_binary = nn.Conv2d(5, 10, kernel_size=3, padding=1, stride=2)
-            
         self.batchnorm1_no_binary = nn.BatchNorm2d(5)
-        self.batchnorm1_binary = nn.BatchNorm2d(5)
-        self.batchnorm2_no_binary = nn.BatchNorm2d(10)
-        self.batchnorm2_binary = nn.BatchNorm2d(10)
+        if self.maxpooling:
+            self.maxpool1_no_binary = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer1_no_binary = nn.ReLU()
+            
+        # conv2 no binary
+        if self.maxpooling:
+            self.layer2_no_binary = nn.Conv2d(5, 10, kernel_size=3, padding=1)
+        else:
+            self.layer2_no_binary = nn.Conv2d(5, 10, kernel_size=3, padding=1, stride=2)
+        self.batchnorm2_no_binary = nn.BatchNorm2d(10)
+        if self.maxpooling:
+            self.maxpool2_no_binary = nn.MaxPool2d(kernel_size=2, stride=2)
         self.act_layer2_no_binary = nn.ReLU()
         
+        # conv1 binary
+        if self.maxpooling:
+            self.layer1_binary = nn.Conv2d(1, 5, kernel_size=3, padding=1)
+        else:
+            self.layer1_binary = nn.Conv2d(1, 5, kernel_size=3, padding=1, stride=2)
+        self.batchnorm1_binary = nn.BatchNorm2d(5)
+        if self.maxpooling:
+            self.maxpool1_binary = nn.MaxPool2d(kernel_size=2, stride=2)
         if self.mode == 'Deterministic':
             self.act_layer1_binary = DeterministicBinaryActivation(estimator=estimator)
-            self.act_layer2_binary = DeterministicBinaryActivation(estimator=estimator)
         elif self.mode == 'Stochastic':
             self.act_layer1_binary = StochasticBinaryActivation(estimator=estimator)
+        
+        # conv2 binary
+        if self.maxpooling:
+            self.layer2_binary = nn.Conv2d(5, 10, kernel_size=3, padding=1)
+        else:
+            self.layer2_binary = nn.Conv2d(5, 10, kernel_size=3, padding=1, stride=2)
+        self.batchnorm2_binary = nn.BatchNorm2d(10)
+        if self.maxpooling:
+            self.maxpool2_binary = nn.MaxPool2d(kernel_size=2, stride=2)
+        if self.mode == 'Deterministic':
+            self.act_layer2_binary = DeterministicBinaryActivation(estimator=estimator)
+        elif self.mode == 'Stochastic':
             self.act_layer2_binary = StochasticBinaryActivation(estimator=estimator)
-            
+        
         self.fc = nn.Linear(7*7*10*2, 10)
 
     def forward(self, input):
@@ -295,14 +314,14 @@ class BinaryNetMNIST(Net):
 
         if self.maxpooling:
             self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1,bias=self.bias)
-            self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, bias=self.bias)
-            self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-            self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         else:
             self.layer1 = nn.Conv2d(1, 10, kernel_size=3, padding=1, stride=2, bias=self.bias)
-            self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2, bias=self.bias)
             
         self.batchnorm1 = nn.BatchNorm2d(10)
+        
+        if self.maxpooling:    
+            self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+            
         if self.first_conv_layer:
             if self.mode == 'Deterministic':
                 self.act_layer1 = DeterministicBinaryActivation(estimator=estimator)
@@ -311,7 +330,16 @@ class BinaryNetMNIST(Net):
         else:
             self.act_layer1 = nn.ReLU()  # Hardsigmoid()
             
+        if self.maxpooling:
+            self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, bias=self.bias)
+        else:
+            self.layer2 = nn.Conv2d(10, 20, kernel_size=3, padding=1, stride=2, bias=self.bias)
+            
         self.batchnorm2 = nn.BatchNorm2d(20)
+        
+        if self.maxpooling:  
+            self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+            
         if self.last_conv_layer:
             if self.mode == 'Deterministic':
                 self.act_layer2 = DeterministicBinaryActivation(estimator=estimator)

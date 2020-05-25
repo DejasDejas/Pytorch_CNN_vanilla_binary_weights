@@ -20,7 +20,11 @@ class DeterministicBinaryActivation(nn.Module):
             self.binarizer = RoundREINFORCE
 
     def forward(self, input):
-        x, slope = input
+        if len(input) == 2:
+            x, slope = input
+        else:
+            x = input
+            slope = 1.0
         x = self.act(slope * x)
         x = self.binarizer(x)
         if self.estimator == 'REINFORCE':
@@ -44,7 +48,11 @@ class StochasticBinaryActivation(nn.Module):
             self.binarizer = BernoulliREINFORCE
 
     def forward(self, input):
-        x, slope = input
+        if len(input) == 2:
+            x, slope = input
+        else:
+            x = input
+            slope = 1.0
         probability = self.act(slope * x)
         out = self.binarizer(probability)
         if self.estimator == 'REINFORCE':
