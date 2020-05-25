@@ -383,9 +383,14 @@ class NoBinaryNetOmniglotClassification(Net):
         super(NoBinaryNetOmniglotClassification, self).__init__()
 
         self.maxpooling = maxpooling
-        
         if self.maxpooling:
             self.stride = 1
+        
+        self.layer1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, stride=self.stride)
+        self.batchNorm1 = nn.BatchNorm2d(64)
+        if self.maxpooling:
+            self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        
             self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
             self.maxPool2 = nn.MaxPool2d(kernel_size=2, stride=2)    
             self.maxPool3 = nn.MaxPool2d(kernel_size=2, stride=2)  
