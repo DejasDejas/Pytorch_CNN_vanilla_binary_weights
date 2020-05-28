@@ -4,7 +4,7 @@ We study these binary activations with two datasets: [Part1: MNIST](#part1-mnist
 
 This repository uses Pytorch library.
 
-Colaboratory notebooks for part1 et part2 contains some differents visualization tools to compare networks with binary weights and network with no binary weights, e.g.:
+Colaboratory notebooks in Parts 1 and 2 contain visualization tools to compare binary and no binary networks, such as:
 - visualization activations values for a specific data
 - visualization filters trained by network
 - visualization heatmap for prediction data
@@ -12,7 +12,7 @@ Colaboratory notebooks for part1 et part2 contains some differents visualization
 - visualization generated images for activation maximization with gradient a ascent
 - visualization 1 nearest neighbor classification with different global representation of data
 
-Learning networks code use Pytorch Ignite (in "experiments/MNIST_binary_Run_Notebook.ipynb).
+The code to train networks is located in "experiments/MNIST_binary_Run_Notebook.ipynb and uses Pytorch Ignite.
 
 # Introduction: train discrete variables
 
