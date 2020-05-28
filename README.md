@@ -4,6 +4,16 @@ We study these binary activations with two datasets: [Part1: MNIST](#part1-mnist
 
 This repository uses Pytorch library.
 
+Colaboratory notebooks for part1 et part2 contains some differents visualization tools to compare networks with binary weights and network with no binary weights, e.g.:
+- visualization activations values for a specific data
+- visualization filters trained by network
+- visualization heatmap for prediction data
+- visualization regions that maximizes a specific filter
+- visualization generated images for activation maximization with gradient a ascent
+- visualization 1 nearest neighbor classification with different global representation of data
+
+Learning networks code use Pytorch Ignite (in "experiments/MNIST_binary_Run_Notebook.ipynb).
+
 # Introduction: train discrete variables
 
 To train a neural network with discrete variables, we can use two methods: REINFORCE (E (Williams, 1992; Mnih & Gregor,2014) and the straight-through estimator (Hinton, 2012; Bengio et al., 2013).
